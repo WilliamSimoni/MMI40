@@ -1,2 +1,3 @@
-# MMI40
-MMI40 project.
+Wizard 2.0
+
+## npm install
