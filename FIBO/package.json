@@ -7,15 +7,19 @@
     "doc": "doc"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "author": "William Simoni",
   "license": "MIT",
   "dependencies": {
     "dotenv": "^8.2.0",
-    "express": "^4.17.1"
+    "express": "^4.17.1",
+    "express-validator": "^6.4.0",
+    "nodemon": "^2.0.2"
   },
   "devDependencies": {
-    "node-fetch": "^2.6.0"
+    "jest": "^25.1.0",
+    "node-fetch": "^2.6.0",
+    "supertest": "^4.0.2"
   }
 }

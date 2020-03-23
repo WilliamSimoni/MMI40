@@ -1,6 +1,6 @@
-const error = require('./FIBO_modules/failComunication')
-const sorting = require('./FIBO_modules/sorting');
-const calculator = require('./FIBO_modules/calculator')
+const error = require('../FIBO_modules/failComunication')
+const sorting = require('../FIBO_modules/sorting');
+const calculator = require('../FIBO_modules/calculator')
 
 const express = require('express');
 const { validationResult, body, check } = require('express-validator');
@@ -10,25 +10,23 @@ const app = express();
 require('dotenv').config();
 const PORT = process.env.PORT || 7777;
 
-const server = app.listen(PORT, () => { console.log(`listening on ${PORT}`) });
-
 //functions to handle errors
 
 function logError(err, request, response, next) {
-    console.error(err.stack);
+    //console.error(err);
     next(err);
 }
 
 function errorJSONParser(err, request, response, next) {
     if (err instanceof SyntaxError && err.status === 400) {
-        response.status(400).json({ status: 400, errors: [{ error: 'body must be in json' }] });
+        response.status(400).json({ status: 400, errors: [{ error: 'body must be in json' }]});
         return;
     }
     next(err);
 }
 
 function genericError(err, request, response, next) {
-    response.status(400).json({ status: 400, errors: [{ error: err.message }] });
+    response.status(400).json({ status: 400, errors: [{ error: err.message }]});
     return;
 }
 
@@ -195,3 +193,5 @@ app.post('/get', [
 app.use(logError);
 app.use(errorJSONParser);
 app.use(genericError);
+
+exports.app = app;
