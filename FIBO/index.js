@@ -114,12 +114,12 @@ app.post('/get', [
                     throw new Error('timePeriod key is not valid');
                 }
                 req.body.timePeriodType1 = true;
-                return true;
+                return timePeriod;
             }
             
             if (typeof timePeriod.start === 'number' && typeof timePeriod.end === 'number' && typeof timePeriod.unit === 'string') {
                 req.body.timePeriodType1 = false;
-                return true;
+                return timePeriod;
             }
 
             throw new Error('Time Period is not valid');
@@ -141,27 +141,27 @@ app.post('/get', [
                 switch (granularity) {
                     case 'minute':
                         if (/\b(second|day|week|month|year)\b/g.test(req.body.timePeriod.key)) {
-                            throw new Error('granularity key is not supported for thi period of time');
+                            throw new Error('granularity key is not supported for this period of time');
                         }
                         break;
                     case 'hour':
                         if (/\b(second|minute|month|year)\b/g.test(req.body.timePeriod.key)) {
-                            throw new Error('granularity key is not supported for thi period of time');
+                            throw new Error('granularity key is not supported for this period of time');
                         }
                         break;
                     case 'week':
                         if (/\b(second|minute|hour|day)\b/g.test(req.body.timePeriod.key)) {
-                            throw new Error('granularity key is not supported for thi period of time');
+                            throw new Error('granularity key is not supported for this period of time');
                         }
                         break;
                     case 'month':
                         if (/\b(second|minute|hour|day|week)\b/g.test(req.body.timePeriod.key)) {
-                            throw new Error('granularity key is not supported for thi period of time');
+                            throw new Error('granularity key is not supported for this period of time');
                         }
                         break;
                     case 'year':
                         if (/\b(second|minute|hour|day|week|month)\b/g.test(req.body.timePeriod.key)) {
-                            throw new Error('granularity key is not supported for thi period of time');
+                            throw new Error('granularity key is not supported for this period of time');
                         }
                         break;
                 }
