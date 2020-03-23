@@ -3,6 +3,7 @@ const sorting = require('./FIBO_modules/sorting');
 const calculator = require('./FIBO_modules/calculator')
 
 const express = require('express');
+const { validationResult, body, check } = require('express-validator');
 const app = express();
 
 //setting environment variables with dotenv
@@ -27,7 +28,7 @@ function errorJSONParser(err, request, response, next) {
 }
 
 function genericError(err, request, response, next) {
-    error.fail(error.errors.BADREQUEST, err.body, response);
+    response.status(400).json({ status: 400, errors: { msg: err.message } });
     return;
 }
 
@@ -35,229 +36,151 @@ function genericError(err, request, response, next) {
 //limit means that the maximum body dimension in a post request is 1 megabyte
 app.use(express.json({ limit: '1mb' }));
 
-//TODO middleware for autentication
-
-//add midlleware which validate input sent by client
-app.use('/get', (request, response, next) => {
-    const requestBody = request.body;
-
-    //DELETE?
-    if (requestBody === null || typeof requestBody === 'undefined') {
-        error.fail(error.errors.BADREQUEST, requestBody, response);
-        return;
-    }
-
-    let projectName = requestBody.projectName;
-    let device = requestBody.device;
-    let keyword = requestBody.keyword;
-    let aggrFun = requestBody.aggregationFunction;
-    let timePeriod = requestBody.timePeriod;
-    let granularity = requestBody.granularity;
-    let storeFlag = requestBody.store;
-
-    //projectName control
-
-    if (typeof projectName !== 'string') {
-        error.fail(error.errors.BADREQUEST, requestBody, response);
-        return;
-    }
-    //deleting white spaces and then checking projectname length
-    projectName = projectName.replace(/\W+/g, '');
-    if (projectName.length === 0) {
-        error.fail(error.errors.BADREQUEST, requestBody, response);
-        return;
-    }
-    projectName = projectName.replace(/\w+/g, (match) => match.toLowerCase());
-    //device control
-
-    if (!Array.isArray(device)) {
-        error.fail(error.errors.BADREQUEST, requestBody, response);
-        return;
-    }
-    if (device.length === 0) {
-        error.fail(error.errors.BADREQUEST, requestBody, response);
-        return;
-    }
-
-    //keyword control
-
-    if (!Array.isArray(keyword)) {
-        error.fail(error.errors.BADREQUEST, requestBody, response);
-        return;
-    }
-    if (keyword.length === 0) {
-        error.fail(error.errors.BADREQUEST, requestBody, response);
-        return;
-    }
-
-    //aggregationFunction control if data is sent (not if the content is right)
-
-    if (typeof aggrFun === 'undefined') {
-        error.fail(error.errors.BADREQUEST, requestBody, response);
-        return;
-    }
-    if (typeof aggrFun.name !== 'string' || typeof aggrFun.code !== 'number') {
-        error.fail(error.errors.BADREQUEST, requestBody, response);
-        return;
-    }
-
-    //time control
-    //flag, if true then the Client has sent timperiod defined as {key: , number:}
-    //if false then the Client has sent timeperiod definded as {start: , end:, unit:}
-    let timePeriodDefined = false;
-
-    if (typeof timePeriod === 'undefined') {
-        error.fail(error.errors.BADREQUEST, requestBody, response);
-        return;
-    }
-
-    //case client sent timeperiod defined as {key: , number: }
-    if (typeof timePeriod.key === 'string' && typeof timePeriod.number === 'number') {
-        //timeperiod.number must be > 0
-        if (timePeriod.number <= 0) {
-            error.fail(error.errors.BADREQUEST, requestBody, response);
-            return;
-        }
-        timePeriod.key = timePeriod.key.replace(/\W+/g, '');
-        if (!(/\b(second|minute|hour|day|week|month|year)\b/g.test(timePeriod.key))) {
-            error.fail(error.errors.BADREQUEST, requestBody, response);
-            return;
-        }
-        timePeriodDefined = true;
-    } else //case timeperiod defined as {start: , end:, unit:}
-        if (typeof timePeriod.start === 'number' && typeof timePeriod.end === 'number' && typeof timePeriod.unit === 'string') {
-            timePeriod.unit = timePeriod.unit.replace(/\W+/g, '');
-            if (!(/\b(n|m|s)\b/g).test(timePeriod.unit)) {
-                error.fail(error.errors.BADREQUEST, requestBody, response);
-                return;
+app.post('/get', [
+    body('projectName')
+        .exists().withMessage('Bad Request').bail()
+        .isString().withMessage('Project Name is not valid').bail()
+        .customSanitizer(projectName => projectName.replace(/\W+/g, ''))
+        .isLength({ min: 1 }).withMessage('Project Name is not valid').bail()
+        .customSanitizer(projectName => projectName.replace(/\w+/g, (match) => match.toLowerCase())),
+    body('device')
+        .exists().withMessage('Bad Request').bail()
+        .isArray({ min: 1 }).withMessage('device is not valid').bail()
+        .custom((device, { req }) => {
+            let deviceQueryString = '';
+            device = sorting.algorithm(device);
+            for (let i = 0; i < device.length; i++) {
+                if (typeof device[i] !== 'string') {
+                    throw new Error('device elements must be not empty string');
+                }
+                device[i] = device[i].replace(/\W+/g, '');
+                if (device[i].length === 0) {
+                    throw new Error('device elements must be not empty string');
+                }
+                deviceQueryString += device[i];
             }
-        } else {
-            error.fail(error.errors.BADREQUEST, requestBody, response);
-            return;
-        }
-
-
-
-    //granularity control
-
-    if (typeof granularity === 'number') {
-        if (granularity <= 0) {
-            error.fail(error.errors.BADREQUEST, requestBody, response);
-            return;
-        }
-    } else if (typeof granularity === 'string' && timePeriodDefined === true) {
-        granularity = granularity.replace(/\W+/g, '');
-        if(!(/\b(minute|hour|day|week|month|year)\b/g).test(granularity)){
-            error.fail(error.errors.BADREQUEST, requestBody, response);
-            return;
-        }
-
-        //checking granularity content
-        switch (granularity) {
-            case 'minute':
-                if (/\b(second|day|week|month|year)\b/g.test(timePeriod.key)) {
-                    error.fail(error.errors.GRANULARITYNOTSUPPORTED, requestBody, response);
-                    return;
+            req.body.deviceQueryString = deviceQueryString;
+            return device;
+        }),
+    body('keyword')
+        .exists().withMessage('Bad Request').bail()
+        .isArray({ min: 1 }).withMessage('keyword is not valid').bail()
+        .customSanitizer((keyword, { req }) => {
+            let keywordQueryString = '';
+            keyword = sorting.algorithm(keyword);
+            for (let i = 0; i < keyword.length; i++) {
+                if (typeof keyword[i] !== 'string') {
+                    throw new Error('keyword elements must be not empty string');
                 }
-                break;
-            case 'hour':
-                if (/\b(second|minute|month|year)\b/g.test(timePeriod.key)) {
-                    error.fail(error.errors.GRANULARITYNOTSUPPORTED, requestBody, response);
-                    return;
+                keyword[i] = keyword[i].replace(/\W+/g, '');
+                if (keyword[i].length === 0) {
+                    throw new Error('keyword elements must be not empty string');
                 }
-                break;
-            case 'week':
-                if (/\b(second|minute|hour|day)\b/g.test(timePeriod.key)) {
-                    error.fail(error.errors.GRANULARITYNOTSUPPORTED, requestBody, response);
-                    return;
+                keywordQueryString += keyword[i];
+            }
+            req.body.keywordQueryString = keywordQueryString;
+            return keyword;
+        }),
+    body('aggregationFunction.name')
+        .exists().withMessage('Bad Request').bail()
+        .isString().withMessage('Aggregation Function name is not valid').bail()
+        .customSanitizer(aggrFunName => aggrFunName.replace(/\W+/g, ''))
+        .custom(aggrFunName => {
+            if (!calculator.legalFunctions.includes(aggrFunName)) {
+                throw new Error('Aggregation Function name is not supported yet');
+            }
+            return true;
+        }),
+    body('aggregationFunction.code')
+        .exists().withMessage('Bad Request').bail()
+        .isInt().withMessage('Aggregation Function code is not valid').bail()
+        .custom(code => {
+            if (!calculator.legalCodes(code)) {
+                throw new Error('Aggregation Function code is not valid');
+            }
+            return true;
+        }),
+    body('timePeriod')
+        .exists().withMessage('Bad Request').bail()
+        .customSanitizer((timePeriod, { req }) => {
+            //case client sent timeperiod defined as {key: , number: }
+            if (typeof timePeriod.key === 'string' && typeof timePeriod.number === 'number') {
+                //timeperiod.number must be > 0
+                if (timePeriod.number <= 0) {
+                    throw new Error('timePeriod number must be > 0');
                 }
-                break;
-            case 'month':
-                if (/\b(second|minute|hour|day|week)\b/g.test(timePeriod.key)) {
-                    error.fail(error.errors.GRANULARITYNOTSUPPORTED, requestBody, response);
-                    return;
+                timePeriod.key = timePeriod.key.replace(/\W+/g, '');
+                if (!(/\b(second|minute|hour|day|week|month|year)\b/g.test(timePeriod.key))) {
+                    throw new Error('timePeriod key is not valid');
                 }
-                break;
-            case 'year':
-                if (/\b(second|minute|hour|day|week|month)\b/g.test(timePeriod.key)) {
-                    error.fail(error.errors.GRANULARITYNOTSUPPORTED, requestBody, response);
-                    return;
+                req.body.timePeriodType1 = true;
+                return true;
+            }
+            
+            if (typeof timePeriod.start === 'number' && typeof timePeriod.end === 'number' && typeof timePeriod.unit === 'string') {
+                req.body.timePeriodType1 = false;
+                return true;
+            }
+
+            throw new Error('Time Period is not valid');
+        }),
+    body('granularity')
+        .exists().withMessage('Bad Request').bail()
+        .customSanitizer((granularity, { req }) => {
+            if (typeof granularity === 'number') {
+                if (granularity <= 0) {
+                    throw new Error('granularity must be > 0');
                 }
-                break;
-        }
-    } else {
-        error.fail(error.errors.BADREQUEST, requestBody, response);
-        return;
+            } else if (typeof granularity === 'string' && req.body.timePeriodType1 === true) {
+                granularity = granularity.replace(/\W+/g, '');
+                if (!(/\b(minute|hour|day|week|month|year)\b/g).test(granularity)) {
+                    throw new Error('granularity key is not correct');
+                }
+
+                //checking granularity content
+                switch (granularity) {
+                    case 'minute':
+                        if (/\b(second|day|week|month|year)\b/g.test(req.body.timePeriod.key)) {
+                            throw new Error('granularity key is not supported for thi period of time');
+                        }
+                        break;
+                    case 'hour':
+                        if (/\b(second|minute|month|year)\b/g.test(req.body.timePeriod.key)) {
+                            throw new Error('granularity key is not supported for thi period of time');
+                        }
+                        break;
+                    case 'week':
+                        if (/\b(second|minute|hour|day)\b/g.test(req.body.timePeriod.key)) {
+                            throw new Error('granularity key is not supported for thi period of time');
+                        }
+                        break;
+                    case 'month':
+                        if (/\b(second|minute|hour|day|week)\b/g.test(req.body.timePeriod.key)) {
+                            throw new Error('granularity key is not supported for thi period of time');
+                        }
+                        break;
+                    case 'year':
+                        if (/\b(second|minute|hour|day|week|month)\b/g.test(req.body.timePeriod.key)) {
+                            throw new Error('granularity key is not supported for thi period of time');
+                        }
+                        break;
+                }
+            } else {
+                throw new Error('granularity must be a key or a number');
+            }
+            return granularity;
+        }),
+    body('store')
+    .exists().withMessage('Bad Request').bail()
+    .isBoolean().withMessage('store must be boolean true or false').bail()
+], (request, response) => {
+    const errors = validationResult(request);
+    if (!errors.isEmpty()) {
+        return response.status(400).json({ status: 400, errors: errors.array() });
     }
-
-    //store control
-    if (typeof storeFlag !== 'boolean') {
-        error.fail(error.errors.BADREQUEST, requestBody, response);
-        return;
-    }
-
-    //variables used to query FIBO db
-    let deviceQueryString = '';
-    let keywordQueryString = '';
-
-    //Ordering device array, deleting spaces from device 
-    //item in device array. Then checking if item.length == 0. 
-    //Eventually creating device string for FIBO db query
-
-    device = sorting.algorithm(device);
-    for (item of device) {
-        item = item.replace(/\W+/g, '');
-        if (item.length === 0) {
-            error.fail(error.errors.BADREQUEST, requestBody, response);
-            return;
-        }
-        deviceQueryString += item;
-    }
-
-    //Ordering keyword array, deleting spaces from keyword 
-    //item in keyword array. Then checking if item.length == 0.
-    //Eventually creating keyword string for FIBO db query.
-
-    keyword = sorting.algorithm(keyword);
-    for (item of keyword) {
-        //if (typeof item) ??
-        item = item.replace(/\W+/g, '');
-        if (item.length === 0) {
-            error.fail(error.errors.BADREQUEST, requestBody, response);
-            return;
-        }
-        keywordQueryString += item;
-    }
-
-    //checking content of aggregation function object
-    aggrFun.name = aggrFun.name.replace(/\W+/g, '');
-    if (!calculator.legalFunctions.includes(aggrFun.name)) {
-        error.fail(error.errors.NOTSUPPORTEDFUNCTION, requestBody, response);
-        return;
-    }
-    if (!calculator.legalCodes(aggrFun.code)) {
-        error.fail(error.errors.NOTSUPPORTEDFUNCTION, requestBody, response);
-        return;
-    }
-
-    requestBody.projectName = projectName;
-    requestBody.device = device;
-    requestBody.keyword = keyword;
-    requestBody.aggregationFunction = aggrFun;
-    requestBody.timePeriod = timePeriod;
-    requestBody.granularity = granularity;
-    requestBody.store = storeFlag;
-    requestBody.deviceQuery = deviceQueryString;
-    requestBody.keyworQuery = keywordQueryString;
-
-    next();
-});
-
-app.post('/get', (request, response) => {
-    const requestBody = request.body;
-    console.log(requestBody);
-    response.json({ status: 200 });
-});
+    response.status(200).json({ status: 200, request: request.body });
+}
+);
 
 app.use(logError);
 app.use(errorJSONParser);
