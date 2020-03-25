@@ -1,5 +1,18 @@
 const fetch = require('node-fetch');
 
+function postBody(projectName, device, keyword, aggrFun, timePeriod, granularity, store) {
+    const request = {
+        projectName: projectName,
+        device: device,
+        keyword: keyword,
+        aggregationFunction: aggrFun,
+        timePeriod: timePeriod,
+        granularity: granularity,
+        store: store
+    }
+    return request;
+}
+
 async function send(request) {
     const api_url = 'http://localhost:7777/get';
     const options = {
@@ -17,13 +30,13 @@ async function send(request) {
 }
 
 const request = {
-    projectName: 'PIERUCCI',
-    device: ['temperatura','caldaia'],
-    keyword: ['temperatura       ','pressione'],
-    aggregationFunction: { name: 'min', code: 1 },
-    timePeriod: { start:123242, end: 132132, unit:'h' },
+    projectName: ' Pierucci',
+    device: ['device 1','device 2'],
+    keyword: ['temperature'],
+    aggregationFunction: { name: 'sum', code: 0 },
+    timePeriod: { key:'week', number:10},
     granularity: 12,
     store: true
 }
 
-send(request).then((json) => {console.log(json);});
+send(request).then((json) => {console.log(json.result[1].result);});

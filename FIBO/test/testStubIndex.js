@@ -1,6 +1,10 @@
-const error = require('../FIBO_modules/failComunication')
+
 const sorting = require('../FIBO_modules/sorting');
 const calculator = require('../FIBO_modules/calculator')
+const {SanitizerError} = require('../Error_Class/SanitizerError');
+const database = require('../FIBO_modules/database')
+
+const moment = require('moment');
 
 const express = require('express');
 const { validationResult, body, check } = require('express-validator');
@@ -9,24 +13,28 @@ const app = express();
 //setting environment variables with dotenv
 require('dotenv').config();
 const PORT = process.env.PORT || 7777;
-
 //functions to handle errors
 
-function logError(err, request, response, next) {
-    //console.error(err);
-    next(err);
-}
 
 function errorJSONParser(err, request, response, next) {
     if (err instanceof SyntaxError && err.status === 400) {
-        response.status(400).json({ status: 400, errors: [{ error: 'body must be in json' }]});
+        response.status(400).json({ status: 400, errors: [{ error: 'body must be in json' }] });
+        return;
+    }
+    next(err);
+}
+
+function SanitizerErr(err, request, response, next) {
+    if (err instanceof SanitizerError && err.status === 400) {
+        response.status(400).json({ status: 400, errors: [{ error: err.message }] });
         return;
     }
     next(err);
 }
 
 function genericError(err, request, response, next) {
-    response.status(400).json({ status: 400, errors: [{ error: err.message }]});
+    console.error(err.stack);
+    response.status(400).json({ status: 400, errors: [{ error: 'Something went wrong' }] });
     return;
 }
 
@@ -44,39 +52,31 @@ app.post('/get', [
     body('device')
         .exists().withMessage('Bad Request').bail()
         .isArray({ min: 1 }).withMessage('device is not valid').bail()
-        .customSanitizer((device, { req }) => {
-            let deviceQueryString = '';
-            device = sorting.algorithm(device);
+        .customSanitizer(device => {
             for (let i = 0; i < device.length; i++) {
                 if (typeof device[i] !== 'string') {
-                    throw new Error('device elements must be not empty string');
+                    throw new SanitizerError('device elements must be not empty string');
                 }
-                device[i] = device[i].replace(/\W+/g, '');
+                device[i] = device[i].trim();
                 if (device[i].length === 0) {
-                    throw new Error('device elements must be not empty string');
+                    throw new SanitizerError('device elements must be not empty string');
                 }
-                deviceQueryString += device[i];
             }
-            req.body.deviceQueryString = deviceQueryString;
             return device;
         }),
     body('keyword')
         .exists().withMessage('Bad Request').bail()
         .isArray({ min: 1 }).withMessage('keyword is not valid').bail()
-        .customSanitizer((keyword, { req }) => {
-            let keywordQueryString = '';
-            keyword = sorting.algorithm(keyword);
+        .customSanitizer(keyword => {
             for (let i = 0; i < keyword.length; i++) {
                 if (typeof keyword[i] !== 'string') {
-                    throw new Error('keyword elements must be not empty string');
+                    throw new SanitizerError('keyword elements must be not empty string');
                 }
-                keyword[i] = keyword[i].replace(/\W+/g, '');
+                keyword[i] = keyword[i].trim();
                 if (keyword[i].length === 0) {
-                    throw new Error('keyword elements must be not empty string');
+                    throw new SanitizerError('keyword elements must be not empty string');
                 }
-                keywordQueryString += keyword[i];
             }
-            req.body.keywordQueryString = keywordQueryString;
             return keyword;
         }),
     body('aggregationFunction.name')
@@ -105,11 +105,11 @@ app.post('/get', [
             if (typeof timePeriod.key === 'string' && typeof timePeriod.number === 'number') {
                 //timeperiod.number must be > 0
                 if (timePeriod.number <= 0) {
-                    throw new Error('timePeriod number must be > 0');
+                    throw new SanitizerError('timePeriod number must be > 0');
                 }
                 timePeriod.key = timePeriod.key.replace(/\W+/g, '');
                 if (!(/\b(second|minute|hour|day|week|month|year)\b/g.test(timePeriod.key))) {
-                    throw new Error('timePeriod key is not valid');
+                    throw new SanitizerError('timePeriod key is not valid');
                 }
                 req.body.timePeriodType1 = true;
                 return timePeriod;
@@ -119,79 +119,134 @@ app.post('/get', [
                 req.body.timePeriodType1 = false;
                 timePeriod.unit = timePeriod.unit.replace(/\W+/g, '');
                 if (!(/\b(n|m|s)\b/g).test(timePeriod.unit)) {
-                    error.fail(error.errors.BADREQUEST, requestBody, response);
-                    return;
+                    throw new SanitizerError('Wrong time period unit');
                 }
                 return timePeriod;
             }
 
-            throw new Error('Time Period is not valid');
+            throw new SanitizerError('Time Period is not valid');
         }),
     body('granularity')
         .exists().withMessage('Bad Request').bail()
         .customSanitizer((granularity, { req }) => {
             if (typeof granularity === 'number') {
                 if (granularity <= 0) {
-                    throw new Error('granularity must be > 0');
+                    throw new SanitizerError('granularity must be > 0');
                 }
             } else if (typeof granularity === 'string' && req.body.timePeriodType1 === true) {
                 granularity = granularity.replace(/\W+/g, '');
                 if (!(/\b(minute|hour|day|week|month|year)\b/g).test(granularity)) {
-                    throw new Error('granularity key is not correct');
+                    throw new SanitizerError('granularity key is not correct');
                 }
 
                 //checking granularity content
                 switch (granularity) {
                     case 'minute':
                         if (/\b(second|day|week|month|year)\b/g.test(req.body.timePeriod.key)) {
-                            throw new Error('granularity key is not supported for this period of time');
+                            throw new SanitizerError('granularity key is not supported for this period of time');
                         }
                         break;
                     case 'hour':
                         if (/\b(second|minute|month|year)\b/g.test(req.body.timePeriod.key)) {
-                            throw new Error('granularity key is not supported for this period of time');
+                            throw new SanitizerError('granularity key is not supported for this period of time');
                         }
                         break;
                     case 'week':
                         if (/\b(second|minute|hour|day)\b/g.test(req.body.timePeriod.key)) {
-                            throw new Error('granularity key is not supported for this period of time');
+                            throw new SanitizerError('granularity key is not supported for this period of time');
                         }
                         break;
                     case 'month':
                         if (/\b(second|minute|hour|day|week)\b/g.test(req.body.timePeriod.key)) {
-                            throw new Error('granularity key is not supported for this period of time');
+                            throw new SanitizerError('granularity key is not supported for this period of time');
                         }
                         break;
                     case 'year':
                         if (/\b(second|minute|hour|day|week|month)\b/g.test(req.body.timePeriod.key)) {
-                            throw new Error('granularity key is not supported for this period of time');
+                            throw new SanitizerError('granularity key is not supported for this period of time');
                         }
                         break;
                 }
             } else {
-                throw new Error('granularity must be a key or a number');
+                throw new SanitizerError('granularity must be a key or a number'); //TOWRITEBETTER
             }
             return granularity;
         }),
     body('store')
         .exists().withMessage('Bad Request').bail()
         .isBoolean().withMessage('store must be boolean true or false').bail()
-], (request, response) => {
-    const errors = validationResult(request);
-    if (!errors.isEmpty()) {
-        const errArray = errors.array();
-        let errResponse = [];
-        for (err of errArray) {
-            errResponse.push({ error: err.msg });
+], async (request, response) => {
+    try {
+        //handle validation error inside custom function
+        const errors = validationResult(request);
+        if (!errors.isEmpty()) {
+            const errArray = errors.array();
+            let errResponse = [];
+            for (err of errArray) {
+                errResponse.push({ error: err.msg });
+            }
+            return response.status(400).json({ status: 400, errors: errResponse });
         }
-        return response.status(400).json({ status: 400, errors: errResponse });
+
+        const body = request.body;
+        let devices = body.device;
+        let keywords = body.keyword;
+        let timePeriod = body.timePeriod;
+        let aggrFun = body.aggregationFunction;
+        let granularity = body.granularity;
+        let store = body.store;
+
+        const start = Math.floor(moment().subtract(timePeriod.number, timePeriod.key).unix() * 1000000000);
+
+        //array where to save the query result 
+        let queryResult = [];
+
+        //handle case divided: [device,keyword] aggregated: [] and divided: [keyword,device] aggregated: []
+        if (aggrFun.code <= 1) {
+            //query database only if store=true and Time Period is defined as {key: , number: }
+            if (store === true && body.timePeriodType1 === true) {
+                let promises = [];
+                for (device of devices) {
+                    for (keyword of keywords) {
+                        const promise = database.query(start, device, keyword,
+                            aggrFun.name, aggrFun.code.toString(), body.timePeriod.key,
+                            timePeriod.number.toString(), granularity.toString());
+                        //push query in promises array
+                        promises.push(promise);
+                    }
+                }
+                //await for all query result
+                await Promise.all(promises)
+                    .then((response) => {
+                        let i = 0;
+                        for (device of devices) {
+                            for (keyword of keywords) {
+                                queryResult.push({ device: device, keyword: keyword, result: response[i] });
+                                i++;
+                            }
+                        }
+                    })
+                    .catch(reason => {
+                        console.error(reason);
+                    });
+
+                response.status(200).json({ status: 200, result: queryResult });
+                
+                return;
+            }
+        }
+
+        response.status(200).json({ status: 200, request: request.body });
+
+    } catch (err) {
+        console.error(err);
+        response.status(400).json({ status: 400, errors: [{ error: 'Something went wrong' }] });
     }
-    response.status(200).json({ status: 200, request: request.body });
 }
 );
 
-app.use(logError);
 app.use(errorJSONParser);
+app.use(SanitizerErr);
 app.use(genericError);
 
 exports.app = app;

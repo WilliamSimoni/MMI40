@@ -29,6 +29,48 @@ describe('Right Post Body', () => {
         expect(res.status).toBeGreaterThanOrEqual(200);
         expect(res.status).toBeLessThan(300);
     });
+    it('time period key is second', async () => {
+        const res = await request(app)
+            .post('/get')
+            .send(postBody(' Pierucci ', ['device 1', 'device 2'], ['temperature'], { name: 'sum.', code: 1 }, { key: 'second', number: 1 }, 10, false));
+        expect(res.status).toBeGreaterThanOrEqual(200);
+        expect(res.status).toBeLessThan(300);
+    });
+    it('time period key is min.ute', async () => {
+        const res = await request(app)
+            .post('/get')
+            .send(postBody(' Pierucci ', ['device 1', 'device 2'], ['temperature'], { name: 'sum.', code: 1 }, { key: 'min.ute', number: 1 }, 10, false));
+        expect(res.status).toBeGreaterThanOrEqual(200);
+        expect(res.status).toBeLessThan(300);
+    });
+    it('time period key is hour', async () => {
+        const res = await request(app)
+            .post('/get')
+            .send(postBody(' Pierucci ', ['device 1', 'device 2'], ['temperature'], { name: 'sum.', code: 1 }, { key: 'hour', number: 1 }, 10, false));
+        expect(res.status).toBeGreaterThanOrEqual(200);
+        expect(res.status).toBeLessThan(300);
+    });
+    it('time period key is week', async () => {
+        const res = await request(app)
+            .post('/get')
+            .send(postBody(' Pierucci ', ['device 1', 'device 2'], ['temperature'], { name: 'sum.', code: 1 }, { key: 'week', number: 1 }, 10, false));
+        expect(res.status).toBeGreaterThanOrEqual(200);
+        expect(res.status).toBeLessThan(300);
+    });
+    it('time period key is month', async () => {
+        const res = await request(app)
+            .post('/get')
+            .send(postBody(' Pierucci ', ['device 1', 'device 2'], ['temperature'], { name: 'sum.', code: 1 }, { key: 'month', number: 1 }, 10, false));
+        expect(res.status).toBeGreaterThanOrEqual(200);
+        expect(res.status).toBeLessThan(300);
+    });
+    it('time period key is year', async () => {
+        const res = await request(app)
+            .post('/get')
+            .send(postBody(' Pierucci ', ['device 1', 'device 2'], ['temperature'], { name: 'sum.', code: 1 }, { key: 'year', number: 1 }, 10, false));
+        expect(res.status).toBeGreaterThanOrEqual(200);
+        expect(res.status).toBeLessThan(300);
+    });
 })
 
 describe('Wrong Post Body', () =>{
@@ -125,7 +167,7 @@ describe('Wrong aggregation function Property', () => {
 })
 
 describe('send wrong time period case 1', () => {
-    it('send wrong time period key', async () => {
+    it('send wrong time period key (mese)', async () => {
         const res = await request(app)
             .post('/get')
             .send(postBody('Pierucci', ['device1', 'device2'], ['temperature'], { name: 'sum', code: 1 }, { key: 'mese', number: 24 }, 10, false));
@@ -156,7 +198,7 @@ describe('send wrong time period case 2', () => {
         expect(res.status).toBeGreaterThanOrEqual(400);
         expect(res.status).toBeLessThan(500);
     });
-    it('send granularity as string and time period case 2 is not allowed', async () => {
+    it('send granularity as string and time period case 2', async () => {
         const res = await request(app)
             .post('/get')
             .send(postBody('Pierucci', ['device1', 'device2'], ['temperature'], { name: 'sum', code: 1 }, { start:123242, end: 132132, unit:'h' }, 'month', false));
