@@ -30,13 +30,13 @@ async function send(request) {
 }
 
 const request = {
-    projectName: ' Pierucci',
-    device: ['device 1','device 2'],
+    projectName: 'Pierucci',
+    device: ['device3','device3'],
     keyword: ['temperature'],
-    aggregationFunction: { name: 'sum', code: 0 },
-    timePeriod: { key:'week', number:10},
-    granularity: 12,
-    store: true
+    aggregationFunction: { name: 'mean', code: 5 },
+    timePeriod: {key:'week', number:1},
+    granularity: 7,
+    store: false
 }
 
-send(request).then((json) => {console.log(json.result[1].result);});
+send(request).then((json) => {console.log(json);});

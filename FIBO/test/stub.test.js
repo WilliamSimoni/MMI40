@@ -1,13 +1,15 @@
 const request = require('supertest')
 const { app } = require('./testStubIndex')
 
-function postBody(projectName, device, keyword, aggrFun, timePeriod, granularity, store) {
+function postBody(projectName, device, keyword, aggrFun, timePeriod, start, end, granularity, store) {
     const request = {
         projectName: projectName,
         device: device,
         keyword: keyword,
         aggregationFunction: aggrFun,
         timePeriod: timePeriod,
+        start: start,
+        end: end,
         granularity: granularity,
         store: store
     }
@@ -191,17 +193,10 @@ describe('send wrong time period case 1', () => {
 })
 
 describe('send wrong time period case 2', () => {
-    it('send wrong unit', async () => {
-        const res = await request(app)
-            .post('/get')
-            .send(postBody('Pierucci', ['device1', 'device2'], ['temperature'], { name: 'sum', code: 1 }, { start:123242, end: 132132, unit:'h' }, 10, false));
-        expect(res.status).toBeGreaterThanOrEqual(400);
-        expect(res.status).toBeLessThan(500);
-    });
     it('send granularity as string and time period case 2', async () => {
         const res = await request(app)
             .post('/get')
-            .send(postBody('Pierucci', ['device1', 'device2'], ['temperature'], { name: 'sum', code: 1 }, { start:123242, end: 132132, unit:'h' }, 'month', false));
+            .send(postBody('Pierucci', ['device1', 'device2'], ['temperature'], { name: 'sum', code: 1 }, null ,123242,  132132, 'month', false));
         expect(res.status).toBeGreaterThanOrEqual(400);
         expect(res.status).toBeLessThan(500);
     });
@@ -211,7 +206,7 @@ describe('granularity tests', () => {
     it('send granularity < 0', async () => {
         const res = await request(app)
             .post('/get')
-            .send(postBody('Pierucci', ['device1', 'device2'], ['temperature'], { name: 'sum', code: 1 }, { start:123242, end: 132132, unit:'s' }, -1, false));
+            .send(postBody('Pierucci', ['device1', 'device2'], ['temperature'], { name: 'sum', code: 1 }, null , 123242,  132132, -1, false));
         expect(res.status).toBeGreaterThanOrEqual(400);
         expect(res.status).toBeLessThan(500);
     });
