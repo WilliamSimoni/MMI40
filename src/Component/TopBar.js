@@ -16,7 +16,6 @@ class TopBar extends Component {
             this.textInput = element;
         };
         this.focusTextInput = () => {
-            // Focus the text input using the raw DOM API
             if (this.textInput) {
                 this.textInput.click();
             }
