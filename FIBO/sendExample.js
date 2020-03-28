@@ -14,7 +14,8 @@ function postBody(projectName, device, keyword, aggrFun, timePeriod, granularity
 }
 
 async function send(request) {
-    const api_url = 'http://localhost:7777/get';
+
+    const api_url = `http://localhost:7777/get`;
     const options = {
         method: 'POST',
         headers: {
@@ -22,7 +23,6 @@ async function send(request) {
         },
         body: JSON.stringify(request),
     };
-
     const response = await fetch(api_url, options);
     const json = await response.json();
 
@@ -35,7 +35,7 @@ const request = {
     keyword: ['temperature'],
     aggregationFunction: { name: 'mean', code: 5 },
     timePeriod: {key:'week', number:1},
-    granularity: 7,
+    granularity: {key:'week', number:1},
     store: false
 }
 

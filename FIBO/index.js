@@ -123,11 +123,30 @@ app.post('/get', [
     body('start')
         .if(body('timePeriod').exists())
         .optional()
-        .isInt({ min: 0 }).withMessage('start must be a integer number which represent timestamp'),
+        .isInt({ min: 0 }).withMessage('start must be a integer number which represent timestamp')
+        .if(body('unit').exists())
+        .customSanitizer((start, { req }) => {
+            switch (req.body.unit) {
+                case 'n': return Math.floor(start / 1000000000);
+                case 'm': return Math.floor(start / 1000000);
+                case 'M': return Math.floor(start / 1000);
+                case 's': return start;
+                default: return start;
+            }
+        }),
     body('start')
         .if(body('timePeriod').not().exists())
         .exists().withMessage('if you do not send time Period you must send start').bail()
-        .isInt({ min: 0 }).withMessage('start must be a integer number'),
+        .isInt({ min: 0 }).withMessage('start must be a integer number')
+        .customSanitizer((start, { req }) => {
+            switch (req.body.unit) {
+                case 'n': return Math.floor(start / 1000000000);
+                case 'm': return Math.floor(start / 1000000);
+                case 'M': return Math.floor(start / 1000);
+                case 's': return start;
+                default: return start;
+            }
+        }),
     body('end')
         .optional()
         .exists(body('start')).withMessage('end can be sent only with start defined').bail()
@@ -140,72 +159,45 @@ app.post('/get', [
                 throw new Error('end must be a number > start');
             }
             return true;
+        })
+        .customSanitizer((end, { req }) => {
+            switch (req.body.unit) {
+                case 'n': return Math.floor(end / 1000000000);
+                case 'm': return Math.floor(end / 1000000);
+                case 'M': return Math.floor(end / 1000);
+                case 's': return end;
+                default: return end;
+            }
         }),
     body('unit')
         .if(body('start').exists())
         .isString().withMessage('unit must be a string').bail()
         .matches(/(n|m|M|s)/).withMessage('unit sent is not valid'),
-    body('start')
-        .if(body('start').exists)
-        .if(body('unit').exists())
-        .customSanitizer((start, { req }) => {
-            switch (req.body.unit) {
-                case 'n': return start;
-                case 'm': return start * 1000;
-                case 'M': return start * 1000000;
-                case 's': return start * 1000000000;
-            }
-        }),
     body('granularity')
         .exists().withMessage('granularity not defined').bail()
         .if(body('granularity').isInt())
         .isInt({ min: 1 }).withMessage('granularity must be an integer > 0 or a string if TimePeriod is defined'),
-    /*body('granularity')
-        .if(body('granularity').exists())
-        .if(body('granularity').isString())
-        .custom((granularity, { req }) => {
-            if (!req.body.timePeriod) {
-                throw new Error('granularity as string can be sent only if TimePeriod is defined');
-            }
-            return true;
-        }).bail()
-        .customSanitizer(granularity => granularity.replace(/\W+/g, ''))
+    body('granularity')
+    .if(body('granularity').not().isInt())
         .custom(granularity => {
-            if (!(/\b(minute|hour|day|week|month|year)\b/g).test(granularity)) {
-                throw new Error('granularity key is not correct');
+            if (typeof granularity.key !== 'string' && typeof granularity.number !== 'number') {
+                throw new Error('granularity is not valid');
+            }
+            if (granularity.number <= 0) {
+                throw new Error('granularity number must be > 0');
             }
             return true;
         }).bail()
-        .custom((granularity, {req}) => {
-            //checking granularity content
-            switch (granularity) {
-                case 'minute':
-                    if (/\b(second|day|week|month|year)\b/g.test(req.body.timePeriod.key)) {
-                        throw new Error('granularity key is not supported for this period of time');
-                    }
-                    break;
-                case 'hour':
-                    if (/\b(second|minute|month|year)\b/g.test(req.body.timePeriod.key)) {
-                        throw new Error('granularity key is not supported for this period of time');
-                    }
-                    break;
-                case 'week':
-                    if (/\b(second|minute|hour|day)\b/g.test(req.body.timePeriod.key)) {
-                        throw new Error('granularity key is not supported for this period of time');
-                    }
-                    break;
-                case 'month':
-                    if (/\b(second|minute|hour|day|week)\b/g.test(req.body.timePeriod.key)) {
-                        throw new Error('granularity key is not supported for this period of time');
-                    }
-                    break;
-                case 'year':
-                    if (/\b(second|minute|hour|day|week|month)\b/g.test(req.body.timePeriod.key)) {
-                        throw new Error('granularity key is not supported for this period of time');
-                    }
-                    break;
+        .customSanitizer(granularity => {
+            granularity.key = granularity.key.replace(/\W+/g, '');
+            return granularity;
+        })
+        .custom((granularity) => {
+            if (!(/\b(second|minute|hour|day|week|month|year)\b/g.test(granularity.key))) {
+                throw new Error('granularity key is not valid');
             }
-        }),*/
+            return true;
+        }),
     body('store')
         .exists().withMessage('store is not defined').bail()
         .isBoolean().withMessage('store must be boolean true or false'),
@@ -235,7 +227,8 @@ app.post('/get', [
 
         //if start is not defined, the start moment is defined by timePeriod 
         if (!start) {
-            start = moment().subtract(timePeriod.number, timePeriod.key).unix() * 1000000000;
+            start = moment().subtract(timePeriod.number, timePeriod.key).unix();
+            end = moment().unix();
         } else {
             //if end is not defined, the end moment is the present moment
             if (!end) {
@@ -243,10 +236,20 @@ app.post('/get', [
             }
         }
 
+        const totPeriod = end - start;
+
+        console.log(start,end, totPeriod)
+
+        //transform number granularity in object {key: number: }
+        if (typeof granularity === 'number'){
+            granularity = {key: 'second', number: Math.floor(totPeriod/granularity)}
+        }
+
+        console.log(granularity);
         //array where to save the query result 
         let promises = [];
         let result = [];
-
+/*
         //handle case divided: [device,keyword] aggregated: [] and divided: [keyword,device] aggregated: []
         if (aggrFun.code <= 1) {
             for (device of devices) {
@@ -255,7 +258,7 @@ app.post('/get', [
                 }
             }
         }
-
+*/
         /*********************************************************************************** */
 
         await Promise.all(promises)
