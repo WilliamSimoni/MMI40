@@ -1,17 +1,21 @@
-const sorting = require('./FIBO_modules/sorting');
-const calculator = require('./FIBO_modules/calculator')
-const { SanitizerError } = require('./Error_Class/SanitizerError');
-const database = require('./FIBO_modules/database')
-
-const moment = require('moment');
-
-const express = require('express');
-const { validationResult, body, check } = require('express-validator');
-const app = express();
-
 //setting environment variables with dotenv
 require('dotenv').config();
 const PORT = process.env.PORT || 7777;
+
+const sorting = require(`./FIBO_modules/sorting`);
+const calculator = require(`./FIBO_modules/calculator`);
+const { SanitizerError } = require(`./Error_Class/SanitizerError`);
+const { Database } = require(`./FIBO_modules/database`);
+
+//Creating Database
+const database = new Database();
+
+//For handling time mutations
+const { time, rounder } = require(`./FIBO_modules/time`);
+
+const express = require('express');
+const { validationResult, body } = require('express-validator');
+const app = express();
 
 const server = app.listen(PORT, () => { console.log(`listening on ${PORT}`) });
 
@@ -19,7 +23,7 @@ const server = app.listen(PORT, () => { console.log(`listening on ${PORT}`) });
 
 function errorJSONParser(err, request, response, next) {
     if (err instanceof SyntaxError && err.status === 400) {
-        response.status(400).json({ status: 400, errors: [{ error: 'body must be in json' }] });
+        response.status(400).json({ status: 400, errors: ['body must be in json'] });
         return;
     }
     next(err);
@@ -27,7 +31,7 @@ function errorJSONParser(err, request, response, next) {
 
 function SanitizerErr(err, request, response, next) {
     if (err instanceof SanitizerError && err.status === 400) {
-        response.status(400).json({ status: 400, errors: [{ error: err.message }] });
+        response.status(400).json({ status: 400, errors: [err.message] });
         return;
     }
     next(err);
@@ -35,7 +39,7 @@ function SanitizerErr(err, request, response, next) {
 
 function genericError(err, request, response, next) {
     console.error(err.stack);
-    response.status(400).json({ status: 400, errors: [{ error: 'Something went wrong' }] });
+    response.status(400).json({ status: 400, errors: ['Something went wrong'] });
     return;
 }
 
@@ -176,9 +180,13 @@ app.post('/get', [
     body('granularity')
         .exists().withMessage('granularity not defined').bail()
         .if(body('granularity').isInt())
-        .isInt({ min: 1 }).withMessage('granularity must be an integer > 0 or a string if TimePeriod is defined'),
+        .isInt({ min: 1 }).withMessage('granularity must be an integer > 0 or a string if TimePeriod is defined').bail()
+        .custom((granularity, {req}) => {
+            req.body.granularityIsNumeric = true;
+            return true;
+        }),
     body('granularity')
-    .if(body('granularity').not().isInt())
+        .if(body('granularity').not().isInt())
         .custom(granularity => {
             if (typeof granularity.key !== 'string' && typeof granularity.number !== 'number') {
                 throw new Error('granularity is not valid');
@@ -197,24 +205,33 @@ app.post('/get', [
                 throw new Error('granularity key is not valid');
             }
             return true;
+        }).bail()
+        .custom((granularity, {req}) => {
+            req.body.granularityIsNumeric = false;
+            return true;
         }),
     body('store')
         .exists().withMessage('store is not defined').bail()
-        .isBoolean().withMessage('store must be boolean true or false'),
+        .isBoolean().withMessage('store must be boolean true or false')
+        .if(body('timePeriod').not().exists())
+        .customSanitizer(store => {
+            return false;
+        })
 ], async (request, response) => {
     try {
-        //handle validation error inside custom function
+        //handle validation error
         const errors = validationResult(request);
         if (!errors.isEmpty()) {
             const errArray = errors.array();
             let errResponse = [];
             for (err of errArray) {
-                errResponse.push({ error: err.msg });
+                errResponse.push(err.msg);
             }
             return response.status(400).json({ status: 400, errors: errResponse });
         }
 
         const body = request.body;
+        let project = body.projectName;
         let devices = body.device;
         let keywords = body.keyword;
         let timePeriod = body.timePeriod;
@@ -224,77 +241,89 @@ app.post('/get', [
         let aggrFun = body.aggregationFunction;
         let granularity = body.granularity;
         let store = body.store;
+        const granularityIsNumeric = body.granularityIsNumeric;
 
         //if start is not defined, the start moment is defined by timePeriod 
         if (!start) {
-            start = moment().subtract(timePeriod.number, timePeriod.key).unix();
-            end = moment().unix();
+            start = time.subtract(time.now(), timePeriod.number, timePeriod.key);
+            end = time.now();
         } else {
             //if end is not defined, the end moment is the present moment
             if (!end) {
-                end = moment().unix();
+                end = time.now();
             }
         }
 
-        const totPeriod = end - start;
+        //calculate totalPeriodLength
 
-        console.log(start,end, totPeriod)
+        const totalPeriodLength = end - start;
 
-        //transform number granularity in object {key: number: }
-        if (typeof granularity === 'number'){
-            granularity = {key: 'second', number: Math.floor(totPeriod/granularity)}
+        if (totalPeriodLength < 0){
+            response.status(400).json({ status: 400, errors: ['total Period Length less than 0'] });
+            return;
         }
 
-        console.log(granularity);
+        //If granularity is a number, then it is mutated in the form {key: number:}
+        if (granularityIsNumeric) {
+            if (store === true) {
+                const timeIntervalSecond = time.convertSecond(timePeriod.number, timePeriod.key);
+                granularity = { key: 'second', number: Math.ceil(timeIntervalSecond / granularity) }
+            } else {
+                granularity = { key: 'second', number: Math.ceil(totalPeriodLength / granularity) }
+            }
+        }
+
+        //convert granularity in second;
+        const granularityInSecond = time.convertSecond(granularity.number,granularity.key);
+        
+        if (granularityInSecond > totalPeriodLength){
+            response.status(400).json({ status: 400, errors: ['granularity higher than total Period Length'] });
+            return;
+        }
+
+        //set timeToStart = start. timeToStart is the momento from which start time serie to send to Client
+        let timeToStart = start;
+
+        //if store is true then devices and keyword must be sorted TODO
+
         //array where to save the query result 
         let promises = [];
         let result = [];
-/*
-        //handle case divided: [device,keyword] aggregated: [] and divided: [keyword,device] aggregated: []
-        if (aggrFun.code <= 1) {
-            for (device of devices) {
-                for (keyword of keywords) {
-                    promises.push(handlerCaseAggrFun0Or1(body, device, keyword, timePeriod, start, end, unit, aggrFun, granularity, store));
+        let initialData = [];
+
+
+        if (store === true) {
+            let queryResult = await database.queryDeviceData(project, devices, keywords, aggrFun.name, aggrFun.code.toString(), timePeriod.key, timePeriod.number.toString(), granularity.key, granularity.number.toString(), start*1000000000);
+            for (item of queryResult.result.results) {
+                const statement = queryResult.statement[item.statement_id];
+                if (item.series) {
+                    initialData.push({device: statement.device, keyword: statement.keyword, data: item.series});
+                } else {
+                    initialData.push({device: statement.device, keyword: statement.keyword, data: {}});
+                    if (start){
+                        timeToStart = time.subtract(time.now(), timePeriod.number, timePeriod.key);
+                    }
+                    if (granularityIsNumeric) {
+                        timeToStart = time.nearestMoment(time.round(timeToStart,rounder.roundGran1(timePeriodInSecond)), granularity.number, granularity.key, timeToStart);
+                    } else {
+                        timeToStart = time.nearestMoment(time.round(timeToStart,rounder.roundGran2(granularityInSecond)), granularity.number, granularity.key, timeToStart);
+                    }
+                    //write data in database different measurement 
                 }
             }
         }
-*/
+
         /*********************************************************************************** */
 
-        await Promise.all(promises)
-            .then((response) => {
-                for (row of response) {
-                    result.push(row);
-                }
-            })
-            .catch(reason => {
-                throw new Error(reason);
-            });
-
-        response.status(200).json({ status: 200, result });
+        response.status(200).json({ status: 200, initialData, timeToStart, granularity });
 
     } catch (err) {
         console.error(err);
-        response.status(400).json({ status: 400, errors: [{ error: 'Something went wrong' }] });
+        response.status(400).json({ status: 400, errors: ['Something went wrong'] });
     }
 }
 );
 
-async function handlerCaseAggrFun0Or1(body, device, keyword, timePeriod, start, end, unit, aggrFun, granularity, store) {
-    //query FIBO database if store = true and timePeriod is defined
-    const fiboDbQuery = { device: device, keyword: keyword, data: {} };
-    console.log(start);
-    if (store === true && timePeriod) {
-        try {
-            fiboDbQuery.data = await database.query(start, device, keyword,
-                aggrFun.name, aggrFun.code.toString(), timePeriod.key,
-                timePeriod.number.toString(), granularity.toString());
-        } catch (error) {
-            console.error(error);
-        }
-    }
-    return fiboDbQuery;
-}
 
 //middleware to handling error
 app.use(errorJSONParser);
