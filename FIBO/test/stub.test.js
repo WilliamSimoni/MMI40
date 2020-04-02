@@ -1,5 +1,6 @@
 const request = require('supertest')
 const { app } = require('./testStubIndex')
+const { sum, mean, min, max } = require('mathjs');
 
 function postBody(projectName, device, keyword, aggrFun, timePeriod, granularity, store, start, end, unit) {
     const request = {
