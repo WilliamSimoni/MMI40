@@ -16,11 +16,11 @@
     "express": "^4.17.1",
     "express-validator": "^6.4.0",
     "influxdb-nodejs": "^3.1.0",
-    "moment": "^2.24.0"
+    "moment": "^2.24.0",
+    "node-fetch": "^2.6.0"
   },
   "devDependencies": {
     "jest": "^25.1.0",
-    "node-fetch": "^2.6.0",
     "supertest": "^4.0.2",
     "nodemon": "^2.0.2"
   }

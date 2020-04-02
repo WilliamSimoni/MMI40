@@ -38,12 +38,12 @@ start: moment.utc().subtract(2,'week').startOf('week').unix(),
 const request = {
     projectName: 'pierucci',
     device: ['device1', 'device2'],
-    keyword: ['tempewrature'],
+    keyword: ['temp'],
     aggregationFunction: { name: 'sum', code: 1 },
     timePeriod:{key: 'month', number: 1},
     unit:'s',
     granularity: {key: 'month', number: 1},
-    store: true
+    store: false
 }
 
 //console.log(JSON.stringify(request, null, 2));

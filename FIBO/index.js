@@ -181,7 +181,7 @@ app.post('/get', [
         .exists().withMessage('granularity not defined').bail()
         .if(body('granularity').isInt())
         .isInt({ min: 1 }).withMessage('granularity must be an integer > 0 or a string if TimePeriod is defined').bail()
-        .custom((granularity, {req}) => {
+        .custom((granularity, { req }) => {
             req.body.granularityIsNumeric = true;
             return true;
         }),
@@ -206,7 +206,7 @@ app.post('/get', [
             }
             return true;
         }).bail()
-        .custom((granularity, {req}) => {
+        .custom((granularity, { req }) => {
             req.body.granularityIsNumeric = false;
             return true;
         }),
@@ -258,7 +258,7 @@ app.post('/get', [
 
         const totalPeriodLength = end - start;
 
-        if (totalPeriodLength < 0){
+        if (totalPeriodLength < 0) {
             response.status(400).json({ status: 400, errors: ['total Period Length less than 0'] });
             return;
         }
@@ -274,9 +274,9 @@ app.post('/get', [
         }
 
         //convert granularity in second;
-        const granularityInSecond = time.convertSecond(granularity.number,granularity.key);
-        
-        if (granularityInSecond > totalPeriodLength){
+        const granularityInSecond = time.convertSecond(granularity.number, granularity.key);
+
+        if (granularityInSecond > totalPeriodLength) {
             response.status(400).json({ status: 400, errors: ['granularity higher than total Period Length'] });
             return;
         }
@@ -292,30 +292,46 @@ app.post('/get', [
         let initialData = [];
 
 
-        if (store === true) {
-            let queryResult = await database.queryDeviceData(project, devices, keywords, aggrFun.name, aggrFun.code.toString(), timePeriod.key, timePeriod.number.toString(), granularity.key, granularity.number.toString(), start*1000000000);
-            for (item of queryResult.result.results) {
-                const statement = queryResult.statement[item.statement_id];
-                if (item.series) {
-                    initialData.push({device: statement.device, keyword: statement.keyword, data: item.series});
-                } else {
-                    initialData.push({device: statement.device, keyword: statement.keyword, data: {}});
-                    if (start){
-                        timeToStart = time.subtract(time.now(), timePeriod.number, timePeriod.key);
-                    }
-                    if (granularityIsNumeric) {
-                        timeToStart = time.nearestMoment(time.round(timeToStart,rounder.roundGran1(timePeriodInSecond)), granularity.number, granularity.key, timeToStart);
+        //query database
+        try {
+            if (store === true) {
+                let queryResult = await database.queryDeviceData(project, devices, keywords, aggrFun.name, aggrFun.code.toString(), timePeriod.key, timePeriod.number.toString(), granularity.key, granularity.number.toString(), start * 1000000000);
+                for (item of queryResult.result.results) {
+                    const statement = queryResult.statement[item.statement_id];
+                    if (item.series) {
+                        //something found
+                        initialData.push({ device: statement.device, keyword: statement.keyword, data: item.series });
                     } else {
-                        timeToStart = time.nearestMoment(time.round(timeToStart,rounder.roundGran2(granularityInSecond)), granularity.number, granularity.key, timeToStart);
+                        //nothing found
+                        initialData.push({ device: statement.device, keyword: statement.keyword, data: {} });
+                        if (start) {
+                            timeToStart = time.subtract(time.now(), timePeriod.number, timePeriod.key);
+                        }
+                        if (granularityIsNumeric) {
+                            timeToStart = time.nearestMoment(time.round(timeToStart, rounder.roundGran1(timePeriodInSecond)), granularity.number, granularity.key, timeToStart);
+                        } else {
+                            timeToStart = time.nearestMoment(time.round(timeToStart, rounder.roundGran2(granularityInSecond)), granularity.number, granularity.key, timeToStart);
+                        }
+                        //write data in database different measurement 
                     }
-                    //write data in database different measurement 
                 }
             }
+        } catch (err) {
+            store = false;
+            initialData = [];
+            console.error(err);
         }
 
+        result = initialData;
         /*********************************************************************************** */
 
-        response.status(200).json({ status: 200, initialData, timeToStart, granularity });
+        //random data generator
+        const periods = time.createPeriods(start,granularity.number, granularity.key, end);
+        result = await calculator.aggrFun(aggrFun.name, aggrFun.code, createRandomTimeSeries(devices, keywords, periods.length, 50, start));
+
+
+
+        response.status(200).json({ status: 200, result });
 
     } catch (err) {
         console.error(err);
@@ -329,3 +345,29 @@ app.post('/get', [
 app.use(errorJSONParser);
 app.use(SanitizerErr);
 app.use(genericError);
+
+//only for now
+function createRandomTimeSeries(devices, keywords, numberValues, cardinalityValues, start) {
+    let timeSeries = [];
+    for (dev of devices) {
+        let device = [];
+        for (key of keywords) {
+            let keyword = [];
+            let timestamp = start;
+            for (let i = 0; i < numberValues; i++) {
+                let values = [];
+                for (let i = 0; i < cardinalityValues; i++) {
+                    const value = Math.floor(Math.random() * 100);
+                    values.push(value);
+                }
+                keyword.push({ timestamp, values });;
+                timestamp += 50;
+            }
+            device.push({ keywordName: key, timeSerie: keyword });
+        }
+        let deviceResult = { deviceName: dev, keywords: device };
+        timeSeries.push(deviceResult);
+    }
+
+    return timeSeries;
+}

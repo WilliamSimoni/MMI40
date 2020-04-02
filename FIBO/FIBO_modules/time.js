@@ -74,6 +74,16 @@ const time = {
             startMoment = this.add(startMoment, number, key);
         }
         return this.subtract(startMoment, number, key);
+    },
+
+    createPeriods(start, number, key, end){
+        let moment = start;
+        let timestamps = [];
+        while(moment <= end){
+            timestamps.push(moment);
+            moment = this.add(moment, number, key)
+        }
+        return timestamps;
     }
 }
 
