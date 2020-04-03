@@ -81,7 +81,7 @@ const time = {
         let timestamps = [];
         while(moment <= end){
             timestamps.push(moment);
-            moment = this.add(moment, number, key)
+            moment = this.add(moment, number, key);
         }
         return timestamps;
     }
@@ -111,3 +111,5 @@ const rounder = {
 
 exports.time = time;
 exports.rounder = rounder;
+
+console.log(moment.unix('1585382055').utc().unix());

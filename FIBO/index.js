@@ -264,18 +264,22 @@ app.post('/get', [
         }
 
         //If granularity is a number, then it is mutated in the form {key: number:}
+
+        let timePeriodInSecond = 0;
+        if (store == true) {
+            timePeriodInSecond = time.convertSecond(timePeriod.number, timePeriod.key);
+        }
+        
         if (granularityIsNumeric) {
             if (store === true) {
-                const timeIntervalSecond = time.convertSecond(timePeriod.number, timePeriod.key);
-                granularity = { key: 'second', number: Math.ceil(timeIntervalSecond / granularity) }
+                granularity = { key: 'second', number: Math.floor(timePeriodInSecond / granularity) }
             } else {
-                granularity = { key: 'second', number: Math.ceil(totalPeriodLength / granularity) }
+                granularity = { key: 'second', number: Math.floor(totalPeriodLength / granularity) }
             }
         }
 
         //convert granularity in second;
         const granularityInSecond = time.convertSecond(granularity.number, granularity.key);
-
         if (granularityInSecond > totalPeriodLength) {
             response.status(400).json({ status: 400, errors: ['granularity higher than total Period Length'] });
             return;
@@ -290,8 +294,6 @@ app.post('/get', [
         let promises = [];
         let result = [];
         let initialData = [];
-
-
         //query database
         try {
             if (store === true) {
@@ -307,8 +309,10 @@ app.post('/get', [
                         if (start) {
                             timeToStart = time.subtract(time.now(), timePeriod.number, timePeriod.key);
                         }
+                        console.log(granularityIsNumeric);
                         if (granularityIsNumeric) {
                             timeToStart = time.nearestMoment(time.round(timeToStart, rounder.roundGran1(timePeriodInSecond)), granularity.number, granularity.key, timeToStart);
+                            console.log(timeToStart);
                         } else {
                             timeToStart = time.nearestMoment(time.round(timeToStart, rounder.roundGran2(granularityInSecond)), granularity.number, granularity.key, timeToStart);
                         }
@@ -322,14 +326,19 @@ app.post('/get', [
             console.error(err);
         }
 
-        result = initialData;
+        //result = initialData;
         /*********************************************************************************** */
-
+        console.log('hello');
+        //API PART
         //random data generator
-        const periods = time.createPeriods(start,granularity.number, granularity.key, end);
-        result = await calculator.aggrFun(aggrFun.name, aggrFun.code, createRandomTimeSeries(devices, keywords, periods.length, 50, start));
+        timeToStart = time.add(timeToStart, granularity.number, granularity.key);
+        const periods = time.createPeriods(timeToStart, granularity.number, granularity.key, end);
+        //console.log(periods);
+        /*********************************************************************************** */
+        //console.log(timeToStart,granularity.number, granularity.key, end, time.add(timeToStart,granularity.number,granularity.key));
 
-
+        //send data to Calculator
+        result = await calculator.aggrFun(aggrFun.name, aggrFun.code, createRandomTimeSeries(devices, keywords, periods, 50));
 
         response.status(200).json({ status: 200, result });
 
@@ -347,21 +356,19 @@ app.use(SanitizerErr);
 app.use(genericError);
 
 //only for now
-function createRandomTimeSeries(devices, keywords, numberValues, cardinalityValues, start) {
+function createRandomTimeSeries(devices, keywords, periods, cardinalityValues) {
     let timeSeries = [];
     for (dev of devices) {
         let device = [];
         for (key of keywords) {
             let keyword = [];
-            let timestamp = start;
-            for (let i = 0; i < numberValues; i++) {
+            for (timestamp of periods) {
                 let values = [];
                 for (let i = 0; i < cardinalityValues; i++) {
                     const value = Math.floor(Math.random() * 100);
                     values.push(value);
                 }
                 keyword.push({ timestamp, values });;
-                timestamp += 50;
             }
             device.push({ keywordName: key, timeSerie: keyword });
         }

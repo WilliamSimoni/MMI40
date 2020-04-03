@@ -38,11 +38,13 @@ start: moment.utc().subtract(2,'week').startOf('week').unix(),
 const request = {
     projectName: 'pierucci',
     device: ['device1', 'device2'],
-    keyword: ['temp'],
-    aggregationFunction: { name: 'sum', code: 1 },
-    timePeriod:{key: 'month', number: 1},
+    keyword: ['temp', 'pression'],
+    aggregationFunction: { name: 'sum', code: 5 },
+    timePeriod:{key: 'week', number: 2},
     unit:'s',
-    granularity: {key: 'month', number: 1},
+    start: 1585381327,
+    end: 1585386427,
+    granularity: 7,
     store: false
 }
 

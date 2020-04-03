@@ -170,7 +170,6 @@ class Database {
 
         //time intervall
         reader.where('time', start, '>=');
-        console.log(project);
         //where condition
         reader.where('project', project);
         reader.where('device', device);
