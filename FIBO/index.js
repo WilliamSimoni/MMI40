@@ -257,7 +257,7 @@ app.post('/get', [
             timeSeriesStart = start;
             end = now;
         } else {
-            if (timePeriod){
+            if (timePeriod) {
                 timeSeriesStart = time.subtract(time.now(), timePeriod.number, timePeriod.key);
             } else {
                 timeSeriesStart = start;
@@ -269,12 +269,12 @@ app.post('/get', [
             }
         }
 
-        if (start < timeSeriesStart){
+        if (start < timeSeriesStart) {
             response.status(400).json({ status: 400, errors: ['start sent less than timePeriod'] });
             return;
         }
 
-        if (start > now){
+        if (start > now) {
             response.status(400).json({ status: 400, errors: ['start sent higher than timePeriod'] });
             return;
         }
@@ -292,18 +292,14 @@ app.post('/get', [
 
         //mutating granularity in the form {key: number:} if is a number and calculating timeSeriesStart. Also
         //calculating granularityInSecond.
-        
+
         let granularityInSecond;
 
         if (granularityIsNumeric) {
-            if (timePeriod) {
-                granularity = { key: 'second', number: Math.floor(timePeriodInSecond / granularity) };
-                //Using the rule defined in roundGran1 it rounds timeSeriesStart. Then it increments timeSeriesStart untill it is higher than start.
-                if (store === true)
-                    timeSeriesStart = time.nearestMoment(time.round(timeSeriesStart, rounder.roundGran1(timePeriodInSecond)), granularity.number, granularity.key, start);
-            } else {
-                granularity = { key: 'second', number: Math.floor(timePeriodInSecond / granularity) };
-            }
+            granularity = { key: 'second', number: Math.floor(timePeriodInSecond / granularity) };
+            //Using the rule defined in roundGran1 it rounds timeSeriesStart. Then it increments timeSeriesStart untill it is higher than start.
+            if (store === true || timePeriod)
+                timeSeriesStart = time.nearestMoment(time.round(timeSeriesStart, rounder.roundGran1(timePeriodInSecond)), granularity.number, granularity.key, start);
             //converting granularity in second
             granularityInSecond = time.convertSecond(granularity.number, granularity.key);
         } else {
