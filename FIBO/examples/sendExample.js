@@ -40,14 +40,12 @@ const request = {
     device: ['device1', 'device2'],
     keyword: ['temp', 'pression'],
     aggregationFunction: { name: 'sum', code: 5 },
-    timePeriod:{key: 'week', number: 2},
+    timePeriod:{key: 'week', number: 1},
     unit:'s',
-    start: 1585381327,
-    end: 1585386427,
-    granularity: 7,
+    granularity: {key: 'day', number: 1},
     store: false
 }
 
 //console.log(JSON.stringify(request, null, 2));
 
-send(request).then((json) => {console.log(json)});
+send(request).then((json) => {console.log(json.result[0].timeSeries)});

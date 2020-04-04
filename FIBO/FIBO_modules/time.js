@@ -111,5 +111,3 @@ const rounder = {
 
 exports.time = time;
 exports.rounder = rounder;
-
-console.log(moment.unix('1585382055').utc().unix());

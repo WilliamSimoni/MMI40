@@ -205,7 +205,7 @@ class Database {
         const measurement = 'devicedata';
         const databaseClient = this.chooseDatabase(timePeriodLength, timePeriodKey);
         let statement = [];
-
+        
         if (aggrFunCode <= 1) {
             for (let device of devices) {
                 for (let keyword of keywords) {
@@ -228,6 +228,7 @@ class Database {
                 keyword = keyword.replace(/\W+/g, '');
                 keywordQuery += keyword;
             }
+
             for (let device of devices) {
                 device = device.replace(/\W+/g, '');
                 const reader = this.createReaderQueryDeviceData(databaseClient, measurement, project, device, keywordQuery, aggrFunName, aggrFunCode, timePeriodKey, timePeriodLength, granularityKey, granularityNumber, start);
@@ -263,13 +264,14 @@ class Database {
             let deviceQuery = '';
             let keywordQuery = '';
             for (let device of devices) {
-                for (let keyword of keywords) {
-                    device = device.replace(/\W+/g, '');
-                    keyword = keyword.replace(/\W+/g, '');
-                    deviceQuery += device;
-                    keywordQuery += keyword;
-                }
+                device = device.replace(/\W+/g, '');
+                deviceQuery += device;
             }
+            for (let keyword of keywords) {
+                keyword = keyword.replace(/\W+/g, '');
+                keywordQuery += keyword;
+            }
+
             const reader = this.createReaderQueryDeviceData(databaseClient, measurement, project, deviceQuery, keywordQuery, aggrFunName, 1, timePeriodKey, timePeriodLength, granularityKey, granularityNumber, start);
             if (reader){
                 reader.queue();
