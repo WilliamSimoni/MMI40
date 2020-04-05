@@ -3,13 +3,9 @@ Wizard 2.0
 
 -Download last version of Node.js
 
--open terminal
+-download the files in git
 
--create new directory "MyDir"
-
--download the file on git in the new folder
-
--run "cd MyDir"
+-open terminal and navigate to the folder you download the files
 
 -run "npm install" (may take some minute)
 
