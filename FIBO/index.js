@@ -341,8 +341,8 @@ app.post('/get', [
         //query database
         try { 
             if (store === true) {
-                let queryResult = await database.queryDeviceData(project, devices, keywords, aggrFun.name, aggrFun.code.toString(), timePeriod.key, timePeriod.number.toString(), granularity.key, granularity.number.toString(), start * 1000000000);
-                initialData = queryResult;
+                /*let queryResult = await database.queryDeviceData(project, devices, keywords, aggrFun.name, aggrFun.code.toString(), timePeriod.key, timePeriod.number.toString(), granularity.key, granularity.number.toString(), start * 1000000000);
+                initialData = queryResult;*/
             }
         } catch (err) {
             store = false;
