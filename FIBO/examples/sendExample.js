@@ -37,15 +37,16 @@ start: moment.utc().subtract(2,'week').startOf('week').unix(),
 
 const request = {
     projectName: 'pierucci',
-    device: ['device3', 'device4', 'device1'],
-    keyword: ['t', 'p'],
+    device: ['pompa'],
+    keyword: ['temperature'],
     aggregationFunction: { name: 'sum', code: 1 },
-    timePeriod: {key: 'day', number: 1},
-    granularity:{key: 'hour', number: 1},
+    timePeriod: {key: 'minute', number: 10},
+    granularity: 2,
     unit:'s',
     store: true
 }
 
 //console.log(JSON.stringify(request, null, 2));
 
-send(request).then((json) => {console.log(json.result[0].timeSeries)});
+
+send(request).then((json) => {console.log(json.result[0])});

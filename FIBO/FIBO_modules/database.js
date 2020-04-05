@@ -153,11 +153,61 @@ class Database {
         return databaseClient;
     }
 
+    async write(writer) {
+
+    }
+
     //TODO
-    writeDeviceData(project, devices, keywords, aggrFunName, aggrFunCode, timePeriodKey, timePeriodLength, granularityKey, granularityNumber, start) {
+    async writeDeviceData(project, timeSeries, aggrFunName, aggrFunCode, timePeriodKey, timePeriodLength, granularityKey, granularityNumber) {
         const measurement = 'devicedata';
         const databaseClient = this.chooseDatabase(timePeriodLength, timePeriodKey);
 
+        if (aggrFunCode === 0){
+            aggrFunCode = 1;
+        } else 
+            if (aggrFunCode === 5){
+                aggrFunCode = 4;
+            }
+
+        //create writer
+        for (item of timeSeries) {
+
+            let deviceName = '';
+            let keywordName = '';
+            for (device of item.device) {
+                deviceName += device;
+            }
+            for (keyword of item.keyword) {
+                keywordName += keyword;
+            }
+
+            
+            for (let i = 0; i < item.timeSeries.length; i++) {
+
+                databaseClient.write(measurement)
+                    .tag({
+                        aggregationFunctionCode: aggrFunCode,
+                        aggregationFunctionName: aggrFunName,
+                        device: deviceName,
+                        granularityKey: granularityKey,
+                        granularityNumber: granularityNumber,
+                        keyword: keywordName,
+                        project: project,
+                        timePeriodKey: timePeriodKey,
+                        timePeriodLength: timePeriodLength,
+                    })
+                    .field({
+                        value: item.timeSeries[i].value,
+                    })
+                    .time(item.timeSeries[i].time, 's')
+                    .queue()
+            }
+        }
+
+        //write data
+
+        databaseClient.syncWrite()
+            .catch(err => console.error(`sync write queue fail, ${err.message}`));
 
     }
 
@@ -187,14 +237,14 @@ class Database {
     async query(device, keyword, reader) {
         const promise = reader.then();
         const result = await promise
-        .then(data => {
-            if (data.devicedata){
-                return data.devicedata;
-            } else {
-                return [];
-            }
-        })
-        .catch((err) => []);
+            .then(data => {
+                if (data.devicedata) {
+                    return data.devicedata;
+                } else {
+                    return [];
+                }
+            })
+            .catch((err) => []);
         return { device: device, keyword: keyword, timeSeries: result };
     }
 
@@ -224,32 +274,30 @@ class Database {
         if (aggrFunCode <= 1) {
             for (let device of devices) {
                 for (let keyword of keywords) {
-                    device = device.replace(/\W+/g, '');
-                    keyword = keyword.replace(/\W+/g, '');
-                    const reader = this.createReaderQueryDeviceData(databaseClient, measurement, project, device, keyword, aggrFunName, '0', timePeriodKey, timePeriodLength, granularityKey, granularityNumber, start);
+                    const reader = this.createReaderQueryDeviceData(databaseClient, measurement, project, device, keyword, aggrFunName, '1', timePeriodKey, timePeriodLength, granularityKey, granularityNumber, start);
                     if (reader) {
-                        promises.push(this.query(device, keyword, reader));
+                        promises.push(this.query([device], [keyword], reader));
                     }
                 }
             }
 
             const result = await Promise.all(promises);
-            
+
             return result;
         }
 
         if (aggrFunCode == 2) {
             let keywordQuery = '';
+            let keywordArray = [];
             for (let keyword of keywords) {
-                keyword = keyword.replace(/\W+/g, '');
                 keywordQuery += keyword;
+                keywordArray.push(keyword);
             }
 
             for (let device of devices) {
-                device = device.replace(/\W+/g, '');
                 const reader = this.createReaderQueryDeviceData(databaseClient, measurement, project, device, keywordQuery, aggrFunName, aggrFunCode, timePeriodKey, timePeriodLength, granularityKey, granularityNumber, start);
                 if (reader) {
-                    promises.push(this.query(device, keywordQuery, reader));
+                    promises.push(this.query([device], keywordQuery, reader));
                 }
             }
             const result = await Promise.all(promises);
@@ -259,43 +307,45 @@ class Database {
 
         if (aggrFunCode == 3) {
             let deviceQuery = '';
+            let deviceArray = [];
             for (let device of devices) {
-                device = device.replace(/\W+/g, '');
                 deviceQuery += device;
+                deviceArray.push(device);
             }
 
             for (let keyword of keywords) {
-                keyword = keyword.replace(/\W+/g, '');
                 const reader = this.createReaderQueryDeviceData(databaseClient, measurement, project, deviceQuery, keyword, aggrFunName, aggrFunCode, timePeriodKey, timePeriodLength, granularityKey, granularityNumber, start);
                 if (reader) {
-                    promises.push(this.query(deviceQuery, keyword, reader));
+                    promises.push(this.query(deviceArray, [keyword], reader));
                 }
             }
 
             const result = await Promise.all(promises);
-            
+
             return result;
         }
 
         if (aggrFunCode >= 4) {
             let deviceQuery = '';
+            let deviceArray = [];
             let keywordQuery = '';
+            let keywordArray = [];
             for (let device of devices) {
-                device = device.replace(/\W+/g, '');
                 deviceQuery += device;
+                deviceArray.push(device);
             }
             for (let keyword of keywords) {
-                keyword = keyword.replace(/\W+/g, '');
                 keywordQuery += keyword;
+                keywordArray.push(keyword);
             }
 
             const reader = this.createReaderQueryDeviceData(databaseClient, measurement, project, deviceQuery, keywordQuery, aggrFunName, '4', timePeriodKey, timePeriodLength, granularityKey, granularityNumber, start);
             if (reader) {
-                promises.push(this.query(deviceQuery, keywordQuery, reader));
+                promises.push(this.query(deviceArray, keywordArray, reader));
             }
 
             const result = await Promise.all(promises);
-            
+
             return result;
         }
 

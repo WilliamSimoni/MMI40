@@ -20,6 +20,12 @@ const { validationResult, body } = require('express-validator');
 const app = express();
 app.use(compression());
 
+//CORS enab
+/*
+cors = require('cors');
+app.use(cors);
+*/
+
 const server = app.listen(PORT, () => { console.log(`listening on ${PORT}`) });
 
 //functions to handle errors
@@ -253,6 +259,8 @@ app.post('/get', [
 
         //timeSeriesStart is the beginning of the time series that will be sent to the Client.
         let timeSeriesStart;
+        //timeSeriesStartAfterOnePeriod is timeSeriesStart + granularity
+        let timeSeriesStartAfterOnePeriod;
 
         //request timestamp
         let now = time.now();
@@ -303,9 +311,9 @@ app.post('/get', [
 
         if (granularityIsNumeric) {
             //Using the rule defined in roundGran1 it rounds timeSeriesStart. Then it increments timeSeriesStart untill it is higher than start.
-            if (store === true || timePeriod){
+            if (store === true || timePeriod) {
                 timeSeriesStart = time.round(timeSeriesStart, rounder.roundGran1(timePeriodInSecond));
-                granularity = { key: 'second', number: Math.floor((end - timeSeriesStart)/ granularity) };
+                granularity = { key: 'second', number: Math.floor((end - timeSeriesStart) / granularity) };
             } else {
                 granularity = { key: 'second', number: Math.floor(timePeriodInSecond / granularity) };
             }
@@ -324,46 +332,116 @@ app.post('/get', [
             return;
         }
 
-        console.log(timeSeriesStart, granularityInSecond);
         //calculating pointNumber
-        pointNumber = Math.floor((end-timeSeriesStart)/granularityInSecond);
+        pointNumber = Math.floor((end - timeSeriesStart) / granularityInSecond);
 
-        if (pointNumber > MAX_POINT){
+        if (pointNumber > MAX_POINT) {
             response.status(401).json({ status: 401, errors: ['too many points'] });
             return;
         }
 
         //if store is true then devices and keyword must be sorted TODO
 
+
         //array where to save the query result 
         let result = [];
-        let initialData;
+        // lastTime contains from when query ZDM based on the last time stored in db (if store is true). If store is 
+        //false then every lastTime element is timeSeriesStart.
+        let lastTime = {};
+        let queryResult = [];
+
+        timeSeriesStartAfterOnePeriod = time.add(timeSeriesStart, granularity.number, granularity.key) - 1;
+
         //query database
-        try { 
+        try {/*
             if (store === true) {
-                /*let queryResult = await database.queryDeviceData(project, devices, keywords, aggrFun.name, aggrFun.code.toString(), timePeriod.key, timePeriod.number.toString(), granularity.key, granularity.number.toString(), start * 1000000000);
-                initialData = queryResult;*/
-            }
+                queryResult = await database.queryDeviceData(project, devices, keywords, aggrFun.name, aggrFun.code.toString(), timePeriod.key, timePeriod.number.toString(), granularity.key, granularity.number.toString(), start * 1000000000);
+                for (item of queryResult) {
+                    const timeSeriesLength = item.timeSeries.length;
+                    for (device of item.device) {
+                        for (keyword of item.keyword) {
+                            if (!lastTime[device])
+                                lastTime[device] = [];
+                            if (timeSeriesLength === 0) {
+                                lastTime[device].push({ keywordName: keyword, time: timeSeriesStartAfterOnePeriod });
+                            } else {
+                                lastTime[device].push({ keywordName: keyword, time: time.add(item.timeSeries[timeSeriesLength - 1].time, granularity.number, granularity.key) });
+                            }
+                        }
+                    }
+                }
+            } else {*/
+                for (device of devices) {
+                    for (keyword of keywords) {
+                        if (!lastTime[device])
+                            lastTime[device] = [];
+                        lastTime[device].push({ keywordName: keyword, time: timeSeriesStartAfterOnePeriod });
+                    }
+                }
+            //}
         } catch (err) {
             store = false;
-            initialData = [];
+            for (device of devices) {
+                for (keyword of keywords) {
+                    if (!lastTime[device])
+                        lastTime[device] = [];
+                    lastTime[device].push({ keywordName: keyword, time: timeSeriesStartAfterOnePeriod });
+                }
+            }
             console.error(err);
         }
 
-        //result = initialData;
+        //console.log(queryResult);
+        //console.log(lastTime);
+
         /*********************************************************************************** */
         //API PART
+
+        //
+        let periodsList = {};
+        /*
+                const defaultPeriods = time.createPeriods(time.add(timeSeriesStart, granularity.number, granularity.key) - 1, granularity.number, granularity.key, end);
+                const timeSeriesEnd = defaultPeriods[defaultPeriods.length-1];
+        */
+        //query ZDM database
+        for (device in lastTime) {
+            //query ZDM from time set in lastTime object and timeSeriesEnd.  
+            for (keyword of lastTime[device]) {
+                //simulate query
+                if (!periodsList[keyword.time]) {
+                    periodsList[keyword.time] = time.createPeriods(keyword.time, granularity.number, granularity.key, end);
+                    //console.log(keyword.time, periodsList[keyword.time]);
+                }
+                //generate random time Serie
+                keyword.periods = createTimeSeries(periodsList[keyword.time], 50);
+            }
+        }
+
+
+
         //random data generator
         //timeSeriesStart = time.add(timeSeriesStart, granularity.number, granularity.key);
-        const periods = time.createPeriods(time.add(timeSeriesStart, granularity.number, granularity.key)-1, granularity.number, granularity.key, end);
         //console.log(periods);
         /*********************************************************************************** */
         //console.log(timeToStart,granularity.number, granularity.key, end, time.add(timeToStart,granularity.number,granularity.key));
 
         //send data to Calculator
-        result = await calculator.aggrFun(aggrFun.name, aggrFun.code, createRandomTimeSeries(devices, keywords, periods, 50));
+        result = await calculator.aggrFun(aggrFun.name, aggrFun.code, lastTime)
+            .catch(err => console.error(err));
+/*
+        if (store === true) {
+            //add calculate data to data obtained from database
+            for (let i = 0; i < queryResult.length; i++) {
+                queryResult[i].timeSeries = [...queryResult[i].timeSeries, ...result[i].timeSeries];
+            }
+            //save new data in database
+            database.writeDeviceData(project, result, aggrFun.name, aggrFun.code.toString(), timePeriod.key, timePeriod.number.toString(), granularity.key, granularity.number.toString())
+                .catch(err => console.error(err));
 
-        response.status(200).json({ status: 200, result, pointNumber, timeSeriesStart});
+            result = queryResult;
+        }*/
+
+        response.status(200).json({ status: 200, result, pointNumber, timeSeriesStart });
 
     } catch (err) {
         console.error(err);
@@ -379,25 +457,37 @@ app.use(SanitizerErr);
 app.use(genericError);
 
 //only for now
-function createRandomTimeSeries(devices, keywords, periods, cardinalityValues) {
-    let timeSeries = [];
+function createRandomTimeSeries(devices, keywords, per, cardinalityValues) {
+    let periods = {};
     for (dev of devices) {
         let device = [];
         for (key of keywords) {
             let keyword = [];
-            for (timestamp of periods) {
+            for (timestamp of per) {
                 let values = [];
                 for (let i = 0; i < cardinalityValues; i++) {
-                    const value = Math.floor(Math.random() * 100);
+                    const value = Math.floor(Math.random() * 5);
                     values.push(value);
                 }
                 keyword.push({ timestamp, values });;
             }
-            device.push({ keywordName: key, timeSerie: keyword });
+            device.push({ keywordName: key, periods: keyword });
         }
-        let deviceResult = { deviceName: dev, keywords: device };
-        timeSeries.push(deviceResult);
+        periods[dev] = device;
     }
 
-    return timeSeries;
+    return periods;
+}
+
+function createTimeSeries(per, cardinalityValues) {
+    const res = [];
+    for (timestamp of per) {
+        let values = [];
+        for (let i = 0; i < cardinalityValues; i++) {
+            const value = Math.floor(Math.random() * 5);
+            values.push(value);
+        }
+        res.push({ timestamp, values });;
+    }
+    return res;
 }
