@@ -166,7 +166,7 @@ class Database {
         let reader = client.query('request');
         reader.set({ 'format': 'json', 'epoch': 's' });
         reader.measurement = table;
-        reader.addField('value', 'device');
+        reader.addField('value');
 
         //time intervall
         reader.where('time', start, '>=');
@@ -180,7 +180,22 @@ class Database {
         reader.where('timePeriodLength', timePeriodLength);
         reader.where('granularityKey', granularityKey);
         reader.where('granularityNumber', granularityNumber);
+
         return reader;
+    }
+
+    async query(device, keyword, reader) {
+        const promise = reader.then();
+        const result = await promise
+        .then(data => {
+            if (data.devicedata){
+                return data.devicedata;
+            } else {
+                return [];
+            }
+        })
+        .catch((err) => []);
+        return { device: device, keyword: keyword, timeSeries: result };
     }
 
     /**
@@ -204,22 +219,23 @@ class Database {
     async queryDeviceData(project, devices, keywords, aggrFunName, aggrFunCode, timePeriodKey, timePeriodLength, granularityKey, granularityNumber, start) {
         const measurement = 'devicedata';
         const databaseClient = this.chooseDatabase(timePeriodLength, timePeriodKey);
-        let statement = [];
-        
+        let promises = [];
+
         if (aggrFunCode <= 1) {
             for (let device of devices) {
                 for (let keyword of keywords) {
                     device = device.replace(/\W+/g, '');
                     keyword = keyword.replace(/\W+/g, '');
                     const reader = this.createReaderQueryDeviceData(databaseClient, measurement, project, device, keyword, aggrFunName, '0', timePeriodKey, timePeriodLength, granularityKey, granularityNumber, start);
-                    if (reader){
-                        reader.queue();
-                        statement.push({device: device, keyword: keyword});
+                    if (reader) {
+                        promises.push(this.query(device, keyword, reader));
                     }
                 }
             }
-            const result = await databaseClient.syncQuery();
-            return {result, statement};
+
+            const result = await Promise.all(promises);
+            
+            return result;
         }
 
         if (aggrFunCode == 2) {
@@ -232,13 +248,13 @@ class Database {
             for (let device of devices) {
                 device = device.replace(/\W+/g, '');
                 const reader = this.createReaderQueryDeviceData(databaseClient, measurement, project, device, keywordQuery, aggrFunName, aggrFunCode, timePeriodKey, timePeriodLength, granularityKey, granularityNumber, start);
-                if (reader){
-                    reader.queue();
-                    statement.push({device: device, keyword: keywordQuery});
+                if (reader) {
+                    promises.push(this.query(device, keywordQuery, reader));
                 }
             }
-            const result = await databaseClient.syncQuery();
-            return {result, statement};
+            const result = await Promise.all(promises);
+
+            return result;
         }
 
         if (aggrFunCode == 3) {
@@ -251,13 +267,14 @@ class Database {
             for (let keyword of keywords) {
                 keyword = keyword.replace(/\W+/g, '');
                 const reader = this.createReaderQueryDeviceData(databaseClient, measurement, project, deviceQuery, keyword, aggrFunName, aggrFunCode, timePeriodKey, timePeriodLength, granularityKey, granularityNumber, start);
-                if (reader){
-                    reader.queue();
-                    statement.push({device: deviceQuery, keyword: keyword});
+                if (reader) {
+                    promises.push(this.query(deviceQuery, keyword, reader));
                 }
             }
-            const result = await databaseClient.syncQuery();
-            return {result, statement};
+
+            const result = await Promise.all(promises);
+            
+            return result;
         }
 
         if (aggrFunCode >= 4) {
@@ -272,16 +289,16 @@ class Database {
                 keywordQuery += keyword;
             }
 
-            const reader = this.createReaderQueryDeviceData(databaseClient, measurement, project, deviceQuery, keywordQuery, aggrFunName, 1, timePeriodKey, timePeriodLength, granularityKey, granularityNumber, start);
-            if (reader){
-                reader.queue();
-                statement.push({device: deviceQuery, keyword: keywordQuery});
+            const reader = this.createReaderQueryDeviceData(databaseClient, measurement, project, deviceQuery, keywordQuery, aggrFunName, '4', timePeriodKey, timePeriodLength, granularityKey, granularityNumber, start);
+            if (reader) {
+                promises.push(this.query(deviceQuery, keywordQuery, reader));
             }
-            const result = await databaseClient.syncQuery();
-            return {result, statement};
+
+            const result = await Promise.all(promises);
+            
+            return result;
         }
 
-        return {result:{results:[]}, statement:{}};
     }
 
 }

@@ -1,6 +1,7 @@
 //setting environment variables with dotenv
 require('dotenv').config();
 const PORT = process.env.PORT || 7777;
+const MAX_POINT = process.env.MAX_POINT || 400;
 
 const sorting = require(`./FIBO_modules/sorting`);
 const calculator = require(`./FIBO_modules/calculator`);
@@ -13,9 +14,11 @@ const database = new Database();
 //For handling time mutations
 const { time, rounder } = require(`./FIBO_modules/time`);
 
+var compression = require('compression');
 const express = require('express');
 const { validationResult, body } = require('express-validator');
 const app = express();
+app.use(compression());
 
 const server = app.listen(PORT, () => { console.log(`listening on ${PORT}`) });
 
@@ -245,6 +248,9 @@ app.post('/get', [
         //true if granularity is sent as number
         const granularityIsNumeric = body.granularityIsNumeric;
 
+        //point Number to Sent
+        let pointNumber;
+
         //timeSeriesStart is the beginning of the time series that will be sent to the Client.
         let timeSeriesStart;
 
@@ -296,10 +302,13 @@ app.post('/get', [
         let granularityInSecond;
 
         if (granularityIsNumeric) {
-            granularity = { key: 'second', number: Math.floor(timePeriodInSecond / granularity) };
             //Using the rule defined in roundGran1 it rounds timeSeriesStart. Then it increments timeSeriesStart untill it is higher than start.
-            if (store === true || timePeriod)
-                timeSeriesStart = time.nearestMoment(time.round(timeSeriesStart, rounder.roundGran1(timePeriodInSecond)), granularity.number, granularity.key, start);
+            if (store === true || timePeriod){
+                timeSeriesStart = time.round(timeSeriesStart, rounder.roundGran1(timePeriodInSecond));
+                granularity = { key: 'second', number: Math.floor((end - timeSeriesStart)/ granularity) };
+            } else {
+                granularity = { key: 'second', number: Math.floor(timePeriodInSecond / granularity) };
+            }
             //converting granularity in second
             granularityInSecond = time.convertSecond(granularity.number, granularity.key);
         } else {
@@ -315,30 +324,39 @@ app.post('/get', [
             return;
         }
 
+        console.log(timeSeriesStart, granularityInSecond);
+        //calculating pointNumber
+        pointNumber = Math.floor((end-timeSeriesStart)/granularityInSecond);
+
+        if (pointNumber > MAX_POINT){
+            response.status(401).json({ status: 401, errors: ['too many points'] });
+            return;
+        }
+
         //if store is true then devices and keyword must be sorted TODO
 
         //array where to save the query result 
         let promises = [];
         let result = [];
-        let initialData = [];
+        let initialData;
         //query database
-        try {
-            /*
+        try { 
             if (store === true) {
+                /*
                 let queryResult = await database.queryDeviceData(project, devices, keywords, aggrFun.name, aggrFun.code.toString(), timePeriod.key, timePeriod.number.toString(), granularity.key, granularity.number.toString(), start * 1000000000);
+                initialData = queryResult;
                 for (item of queryResult.result.results) {
                     const statement = queryResult.statement[item.statement_id];
                     if (item.series) {
                         //something found
-                        initialData.push({ device: statement.device, keyword: statement.keyword, data: item.series });
+                        initialData.push({ device: statement.device, keyword: statement.keyword, timeSeries: item.series });
                     } else {
                         //nothing found
-                        initialData.push({ device: statement.device, keyword: statement.keyword, data: {} });
+                        initialData.push({ device: statement.device, keyword: statement.keyword, timeSeries: {} });
                         //write data in database different measurement 
                     }
-                }
+                }*/
             }
-            */
         } catch (err) {
             store = false;
             initialData = [];
@@ -349,8 +367,8 @@ app.post('/get', [
         /*********************************************************************************** */
         //API PART
         //random data generator
-        timeSeriesStart = time.add(timeSeriesStart, granularity.number, granularity.key);
-        const periods = time.createPeriods(timeSeriesStart, granularity.number, granularity.key, end);
+        //timeSeriesStart = time.add(timeSeriesStart, granularity.number, granularity.key);
+        const periods = time.createPeriods(time.add(timeSeriesStart, granularity.number, granularity.key)-1, granularity.number, granularity.key, end);
         //console.log(periods);
         /*********************************************************************************** */
         //console.log(timeToStart,granularity.number, granularity.key, end, time.add(timeToStart,granularity.number,granularity.key));
@@ -358,7 +376,7 @@ app.post('/get', [
         //send data to Calculator
         result = await calculator.aggrFun(aggrFun.name, aggrFun.code, createRandomTimeSeries(devices, keywords, periods, 50));
 
-        response.status(200).json({ status: 200, result });
+        response.status(200).json({ status: 200, result, pointNumber, timeSeriesStart});
 
     } catch (err) {
         console.error(err);

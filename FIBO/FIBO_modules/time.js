@@ -104,7 +104,7 @@ const rounder = {
         if (number < 60) return 'minute';
         if (number < 3600) return 'hour';
         if (number < 604800) return 'day';      //7 giorni
-        if (number < 16934400) return 'month';    //28 giorni
+        if (number < 2419200) return 'month';    //28 giorni
         return 'year';
     }
 }
