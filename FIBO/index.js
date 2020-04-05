@@ -336,26 +336,13 @@ app.post('/get', [
         //if store is true then devices and keyword must be sorted TODO
 
         //array where to save the query result 
-        let promises = [];
         let result = [];
         let initialData;
         //query database
         try { 
             if (store === true) {
-                /*
                 let queryResult = await database.queryDeviceData(project, devices, keywords, aggrFun.name, aggrFun.code.toString(), timePeriod.key, timePeriod.number.toString(), granularity.key, granularity.number.toString(), start * 1000000000);
                 initialData = queryResult;
-                for (item of queryResult.result.results) {
-                    const statement = queryResult.statement[item.statement_id];
-                    if (item.series) {
-                        //something found
-                        initialData.push({ device: statement.device, keyword: statement.keyword, timeSeries: item.series });
-                    } else {
-                        //nothing found
-                        initialData.push({ device: statement.device, keyword: statement.keyword, timeSeries: {} });
-                        //write data in database different measurement 
-                    }
-                }*/
             }
         } catch (err) {
             store = false;
