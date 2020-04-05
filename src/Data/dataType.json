@@ -1,0 +1,123 @@
+[
+    {
+        "type": "empty",
+        "data": {
+            "title": "NewData",
+            "type": "",
+            "variables": {
+                "datasource": {
+                    "device": [],
+                    "keyword": []
+                },
+                "aggregationfunction": {
+                    "type": "",
+                    "aggregated": [],
+                    "divided": []
+                }
+            },
+            "timeinterval": "1 seconds",
+            "granularity": "1",
+            "chart": {
+                "type": ""
+            },
+            "lex": "..."
+        }
+    },
+    {
+        "type": "temperature",
+        "data": {
+            "title": "NewDataTemp",
+            "type": "temperature",
+            "variables": {
+                "datasource": {
+                    "device": [],
+                    "keyword": []
+                },
+                "aggregationfunction": {
+                    "type": "mean",
+                    "aggregated": [],
+                    "divided": []
+                }
+            },
+            "timeinterval": "1 seconds",
+            "granularity": "1",
+            "chart": {
+                "type": ""
+            },
+            "lex": "..."
+        }
+    },
+
+    {
+        "type": "wind direction",
+        "data": {
+            "title": "NewDataWind",
+            "type": "wind direction",
+            "variables": {
+                "datasource": {
+                    "device": [],
+                    "keyword": []
+                },
+                "aggregationfunction": {
+                    "type": "mean",
+                    "aggregated": [],
+                    "divided": []
+                }
+            },
+            "timeinterval": "1 seconds",
+            "granularity": "1",
+            "chart": {
+                "type": ""
+            },
+            "lex": "..."
+        }
+    },
+    {
+        "type": "portata",
+        "data": {
+            "title": "NewDataPO",
+            "type": "portata",
+            "variables": {
+                "datasource": {
+                    "device": [],
+                    "keyword": []
+                },
+                "aggregationfunction": {
+                    "type": "mean",
+                    "aggregated": [],
+                    "divided": []
+                }
+            },
+            "timeinterval": "1 seconds",
+            "granularity": "1",
+            "chart": {
+                "type": ""
+            },
+            "lex": "..."
+        }
+    },
+    {
+        "type": "velocità di pompaggio",
+        "data": {
+            "title": "NewDataVP",
+            "type": "velocità di pompaggio",
+            "variables": {
+                "datasource": {
+                    "device": [],
+                    "keyword": []
+                },
+                "aggregationfunction": {
+                    "type": "mean",
+                    "aggregated": [],
+                    "divided": []
+                }
+            },
+            "timeinterval": "1 seconds",
+            "granularity": "1",
+            "chart": {
+                "type": ""
+            },
+            "lex": "..."
+        }
+    }
+]

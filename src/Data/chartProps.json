@@ -1,0 +1,78 @@
+[
+    {
+        "type": "area"
+    },
+    {
+        "type": "bar",
+        "mainLabelX": "",
+        "maniLabelY": "",
+        "legendPosition": "bottom"
+    },
+    {
+        "type": "bubble",
+                "mainLabelX": "",
+                "maniLabelY": "",
+                "legendPosition": "bottom",
+                "trendLine": false
+    },
+    {
+        "type": "column",
+                "mainLabelX": "",
+                "maniLabelY": "",
+                "legendPosition": "bottom"
+                
+    },
+    {
+        "type": "compass",
+        "min": 0,
+        "max": 0,
+        "startAngle": "-180",
+        "endAngle": "180",
+        "label": ""
+    } ,
+    {
+        "type": "donut",
+        "legendPosition": "bottom"
+    },
+    {
+        "type": "gauge",
+        "min": 0,
+        "max": 0,
+        "startAngle": "-180",
+        "endAngle": "180",
+        "label": ""
+    },
+    {
+        "type":"histogram"
+    },
+    {
+        "type": "icon",
+        "icon": "",
+        "valuePosition": "right",
+        "label": ""
+    } ,
+    {
+        "type": "line",
+        "mainLabelX": "",
+        "maniLabelY": "",
+        "legendPosition": "bottom",
+        "lineType": "point"
+    },
+    {
+        "type":"map"
+    },
+    {
+        "type":"pie",
+        "legendPosition": "bottom"
+    },
+    {
+        "type":"stacked"
+    },
+    {
+        "type": "scatter",
+        "mainLabelX": "",
+        "maniLabelY": "",
+        "legendPosition": "bottom",
+        "trendLine": false
+    }
+]

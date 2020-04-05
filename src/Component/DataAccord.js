@@ -2,14 +2,12 @@ import React, { Component } from 'react';
 import { Accordion, AccordionTab } from 'primereact/accordion';
 import { Chips } from 'primereact/chips';
 
-import { InputText } from 'primereact/inputtext';
 import { Dropdown } from 'primereact/dropdown';
 import { SelectButton } from 'primereact/selectbutton';
 import { Spinner } from 'primereact/spinner';
 import { Button } from 'primereact/button';
-import {Dialog} from 'primereact/dialog';
-
-import ChartProps from './CharProp.js'
+import data from '../Data/const.json'
+import chartprops from '../Data/chartProps.json'
 
 import 'primereact/resources/themes/nova-light/theme.css';
 import 'primereact/resources/primereact.min.css';
@@ -19,42 +17,43 @@ class DataAccord extends Component {
 
     constructor(props) {
         super(props)
+        const items=data.datatype.map((key)=> {
+            return {
+                label: key.name,
+                value: key.name
+                
+            }
+        })
         this.state = {
             time1: [],
-            time2: []
+            time2: [],
+            items:items
         }
     }
 
-
-
-
+    addChart(e,s) {
+        let res ={}
+        for(let i=0;i<chartprops.length;i++) {
+            if(chartprops[i].type===e) {
+                res=chartprops[i]
+                break;
+            }
+        }
+        this.props.onChangeChart(res,s)
+        }
 
     render() {
-        const time = [
-            { label: 'Empty', value: ' ' },
-            { label: 'Seconds', value: 'seconds' },
-            { label: 'Minutes', value: 'minutes' },
-            { label: 'Hours', value: 'hours' },
-            { label: 'Days', value: 'days' },
-            { label: 'Months', value: 'months' },
-            { label: 'Years', value: 'years' },
-        ];
-        const charts = [
-            { label: 'Area', value: 'area' },
-            { label: 'Bar', value: 'bar' },
-            { label: 'Bubble', value: 'bubble' },
-            { label: 'Column', value: 'column' },
-            { label: 'Compass', value: 'compass' },
-            { label: 'Donut', value: 'donut' },
-            { label: 'Gauge', value: 'gauge' },
-            { label: 'Histogram', value: 'histogram' },
-            { label: 'Icon', value: 'icon' },
-            { label: 'Line', value: 'line' },
-            { label: 'Map', value: 'map' },
-            { label: 'Pie', value: 'pie' },
-            { label: 'Stacked', value: 'stacked' },
-            { label: 'Scatter', value: 'scatter' },
-        ];
+
+        const time=data.time
+        const charts = data.charts
+
+        const titles=[]
+        const dt=this.props.datas
+        for(let i=0;i<dt.length;i++){
+            if(dt[i].title==="") titles.push([])
+            else titles.push([dt[i].title])            
+        }
+
         return (
             <div style={{ marginTop: '10px' }}>
                 <Accordion>
@@ -64,8 +63,20 @@ class DataAccord extends Component {
                             <Button icon="pi pi-times" className="p-button-danger"
                                 onClick={() => this.props.removeData(s)} />
                             <h3>Title</h3>
-                            <InputText autoFocus type="text" value={row2.title}
-                                onChange={(e) => this.props.onChangeData(e, s)} />
+                            <Chips value={titles[s]}
+                                max={1}
+                                onChange={(e) => {
+                                    titles[s]=e.value
+                                    if(e.value.length===0) this.props.onChangeData("", s)
+                                    else this.props.onChangeData(titles[s][0], s)                                    
+                                    }}></Chips>
+                             <h3>Type</h3>
+                             <Dropdown value={row2.type}
+                                options={this.state.items}
+                                onChange={(e) => this.props.onChangeDType(e, s)}
+                                placeholder="Select a type aggregation" />
+
+                        
                             <h3>Device</h3>
                             <Chips
                                 value={row2.variables.datasource.device}
@@ -107,14 +118,8 @@ class DataAccord extends Component {
                             <h4>Type</h4>
                             <Dropdown value={row2.chart.type}
                                 options={charts}
-                                onChange={(e) => this.props.onChangeChart(e.value, s)}
-                                placeholder="Select a chart" />
-
-
-                            <Button label="Show" icon="pi pi-info-circle" onClick={(e) => this.setState({ visible: true})} />
-                            <Dialog header={'Props for Chart '+row2.chart.type +'in '+row2.title} visible={this.state.visible} style={{ width: '50vw' }} modal={true} onHide={() => this.setState({ visible: false })}>
-                                  <ChartProps chart={row2.chart.type}/>
-                             </Dialog>
+                                onChange={(e) => this.addChart(e.value,s)}
+                                placeholder="Select a chart" />                            
                         </AccordionTab>
 
                     })}

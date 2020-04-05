@@ -8,10 +8,10 @@ import { Growl } from 'primereact/growl';
 import { Chips } from 'primereact/chips';
 import { Dropdown } from 'primereact/dropdown';
 
-import { InputText } from 'primereact/inputtext';
-
 
 import './App.css';
+import data from './Data/const.json'
+import datatype from './Data/dataType.json'
 
 import 'primereact/resources/themes/nova-light/theme.css';
 import 'primereact/resources/primereact.min.css';
@@ -23,6 +23,7 @@ class App extends Component {
 
     constructor(props) {
         super(props);
+
         this.state = {
             aggdiv: [],
             value: 0,
@@ -30,9 +31,8 @@ class App extends Component {
             rolespage: [],
             roles: [],
             template: null,
-            projectname: "",
-            alldata: []
-
+            projectname: [],
+            alldata: [],
 
         }
 
@@ -42,29 +42,12 @@ class App extends Component {
         const YAML = require('json-to-pretty-yaml');
 
         const yamlcomp = {
-            projectname: this.state.projectname,
+            projectname: this.state.projectname[0],
             template: this.state.template,
             roles: this.state.roles,
             views: { view: [] },
 
-            keywords: {
-                wind_direction: {
-                    name: "wind direction",
-                    unitofmeasure: "°",
-                },
-                temperature: {
-                    name: "temperature",
-                    unitofmeasure: "°C"
-                },
-                portata: {
-                    name: "portata",
-                    unitofmeasure: "m ^ 3 / s"
-                },
-                vel_pompaggio: {
-                    name: "velocità di pompaggio",
-                    unitofmeasure: "l / s"
-                }
-            }
+            datatype: data.datatype
         }
         let pages = []
 
@@ -73,7 +56,7 @@ class App extends Component {
 
 
             pages.push({
-                viewname: this.state.name[i],
+                viewname: this.state.name[i][0],
                 admittedroles: this.state.rolespage[i].admittedroles,
                 data: dat
             })
@@ -101,7 +84,7 @@ class App extends Component {
         const alldata = this.state.alldata
         const npage = this.state.value + 1
 
-        const inse = 'NewPage'
+        const inse = ['NewPage']
         const rol = []
         const agd = []
         const data = {
@@ -149,7 +132,7 @@ class App extends Component {
 
     }
 
-    addData(i) {
+    addData(i,h) {
 
         const agdv = this.state.aggdiv
         const aggdiv = agdv[i]
@@ -158,12 +141,13 @@ class App extends Component {
         const k = data[i].value+1
 
         const agd = []
-        const name = 'NewData'
-        const id = 'var' + k
-        const name2 = {
+        //const name = 'NewData'+h
+       
+        
+        let name2 /*= {
             title: name,
+            type: h,
             variables: {
-                id: id,
                 datasource: {
                     device: [],
                     keyword: []
@@ -182,6 +166,12 @@ class App extends Component {
             },
             lex: '...',
 
+        } */
+        for(let i=0;i<datatype.length;i++){
+            if(h===datatype[i].type) {
+                name2=datatype[i].data
+                break;
+            }
         }
         aggdiv.push(agd)
         datai.push(name2)
@@ -270,8 +260,7 @@ class App extends Component {
         let data = []
         let aggdiv = []
         for (let i = 0; i < na.length; i++) {
-
-            pages.push(na[i].viewname)
+            pages.push([na[i].viewname])
             addmi.push({ admittedroles: na[i].admittedroles })
             const k = na[i].data
             const l = k.length
@@ -283,7 +272,6 @@ class App extends Component {
                 if (agg.length == 2) {
                     if (agg.indexOf("device") == 0) {
                         aggdivm.push('agg1')
-                        console.log("qui")//
                         continue;
                     } else {
                         aggdivm.push('agg2')
@@ -315,7 +303,7 @@ class App extends Component {
         this.setState({
             aggdiv: aggdiv,
             rolespage: addmi,
-            projectname: value.projectname,
+            projectname: [value.projectname],
             value: na.length,
             name: pages,
 
@@ -334,31 +322,11 @@ class App extends Component {
 
     }
 
-
-
-
     render() {
 
-        const template = [
-            { label: 'Standard', value: 'Standard' },
-            { label: 'TemplateA', value: 'TemplateA' },
-            { label: 'TemplateB', value: 'TemplateB' },
-        ];
-
-        const keyword = [
-            { label: 'Aggregated[device,keyword]', value: 'agg1' },
-            { label: 'Aggregated[keyword,device]', value: 'agg2' },
-            { label: 'Aggregated[device] Divided[keyword]', value: 'aggdiv' },
-            { label: 'Aggregated[keyword] Divided[device]', value: 'divagg' },
-            { label: 'Divided[device,keyword]', value: 'div' },
-        ];
-
-        const aggregationType = [
-            { label: 'Mean', value: 'mean' },
-            { label: 'Sum', value: 'sum' },
-            { label: 'Min', value: 'min' },
-            { label: 'Max', value: 'max' },
-        ]
+        const template = data.template
+        const keyword = data.aggergationFormat
+        const aggregationType = data.aggregationType
 
         const role = [];
         for (let i = 0; i < this.state.roles.length; i++) {
@@ -376,14 +344,15 @@ class App extends Component {
                         <AccordionTab header="General">
                             <div className="container">
 
-                                <h3>Project Name: {this.state.projectname}</h3>
-
-                                <InputText type="text" tooltip="Enter the Project Name"
-                                    value={this.state.projectname}
-                                    onChange={(e) => this.setState({ projectname: e.target.value })} />
+                                <h3>Project Name: {this.state.projectname[0]}</h3>
+                                <Chips value={this.state.projectname}  
+                                onChange={(e) => this.setState({ projectname: e.value})}
+                                max={1}
+                                tooltip="Premere Enter per confermare"></Chips>
+                                
 
                                 <h3>Roles</h3>
-                                <Chips tooltip="Enter the role name and press enter"
+                                <Chips 
                                     value={this.state.roles}
                                     onChange={(e) => this.setState({ roles: e.value })}></Chips>
 
@@ -404,7 +373,7 @@ class App extends Component {
                               onClick={() => this.addPage()}/>
                     <AccTab names={this.state.name}
                         cancelButton={(i) => { this.cancelPage(i) }}
-                        addData={(i)=> {this.addData(i)}}
+                        addData={(i,h)=> {this.addData(i,h)}}
                         removeData={(s,i) => {this.removeData(s,i)}}
                         onChange1={(e, i) => { this.onChange1(e, i) }}
                         alldata={this.state.alldata}
@@ -420,7 +389,7 @@ class App extends Component {
                         }}
                         onChangeData={(e, s, i) => {
                             const k = this.state.alldata
-                            k[i].datas[s].title = e.target.value
+                            k[i].datas[s].title = e
                             this.setState({
                                 alldata: k
                             })
@@ -480,7 +449,15 @@ class App extends Component {
                         }}
                         onChangeChart={(e, s, i) => {
                             const k = this.state.alldata
-                            k[i].datas[s].chart.type = e
+                            k[i].datas[s].chart = e
+                            this.setState({
+                                alldata: k
+                            })
+                        }}
+
+                        onChangeDType={(e,s,i)=> {
+                            const k = this.state.alldata
+                            k[i].datas[s].type = e.target.value
                             this.setState({
                                 alldata: k
                             })

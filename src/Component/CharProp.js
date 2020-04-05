@@ -5,6 +5,7 @@ import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import { InputText } from 'primereact/inputtext';
 import { Dropdown } from 'primereact/dropdown';
+import { Button } from 'primereact/button';
 
 class ChartProps extends Component {
 
@@ -68,6 +69,7 @@ class ChartProps extends Component {
                                 options={valpos}
                                 onChange={(e) => this.setState({valpos:e.value})}
                                 placeholder="Select a type aggregation" />
+                <Button onClick={() => this.props.ChartProps([this.state.icon,this.state.valpos])}>Save</Button>
                  
 
                   </div>    

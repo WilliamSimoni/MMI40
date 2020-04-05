@@ -1,0 +1,57 @@
+{
+    "template":[        
+            { "label": "Standard", "value": "Standard" },
+            { "label": "TemplateA", "value": "TemplateA" },
+            { "label": "TemplateB", "value": "TemplateB" }        
+    ],
+
+    "time" : [
+        { "label": "Empty", "value": " " },
+        { "label": "Seconds", "value": "seconds" },
+        { "label": "Minutes", "value": "minutes" },
+        { "label": "Hours", "value": "hours" },
+        { "label": "Days", "value": "days" },
+        { "label": "Months", "value": "months" },
+        { "label": "Years", "value": "years" }
+    ],
+
+    "charts" : [
+        { "label": "Area", "value": "area" },
+        { "label": "Bar", "value": "bar" },
+        { "label": "Bubble", "value": "bubble" },
+        { "label": "Column", "value": "column" },
+        { "label": "Compass", "value": "compass" },
+        { "label": "Donut", "value": "donut" },
+        { "label": "Gauge", "value": "gauge" },
+        { "label": "Histogram", "value": "histogram" },
+        { "label": "Icon", "value": "icon" },
+        { "label": "Line", "value": "line" },
+        { "label": "Map", "value": "map" },
+        { "label": "Pie", "value": "pie" },
+        { "label": "Stacked", "value": "stacked" },
+        { "label": "Scatter", "value": "scatter" }
+    ],
+    "aggregationType" :[
+        { "label": "Mean", "value": "mean" },
+        { "label": "Sum", "value": "sum" },
+        { "label": "Min", "value": "min" },
+        { "label": "Max", "value": "max" }
+    ],
+
+    "aggergationFormat" :[
+        { "label": "Aggregated[device,keyword]", "value": "agg1" },
+        { "label": "Aggregated[keyword,device]", "value": "agg2" },
+        { "label": "Aggregated[device] Divided[keyword]", "value": "aggdiv" },
+        { "label": "Aggregated[keyword] Divided[device]", "value": "divagg" },
+        { "label": "Divided[device,keyword]", "value": "div" }
+    ],
+
+    "datatype": [
+         {"name": "wind direction","unitofmeasure": "°"},
+         {"name": "temperature","unitofmeasure": "°C"},
+         {"name": "portata","unitofmeasure": "m ^ 3 / s"},
+         {"name": "velocità di pompaggio","unitofmeasure": "l / s"}
+    ]
+    
+
+}
