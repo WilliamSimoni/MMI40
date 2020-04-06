@@ -49,4 +49,4 @@ const request = {
 //console.log(JSON.stringify(request, null, 2));
 
 
-send(request).then((json) => {console.log(json)});
+send(request).then((json) => {console.log(json.result[0])});
