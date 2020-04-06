@@ -20,11 +20,6 @@ const { validationResult, body } = require('express-validator');
 const app = express();
 app.use(compression());
 
-//CORS enab
-/*
-cors = require('cors');
-app.use(cors);
-*/
 
 const server = app.listen(PORT, () => { console.log(`listening on ${PORT}`) });
 
@@ -51,6 +46,21 @@ function genericError(err, request, response, next) {
     response.status(400).json({ status: 400, errors: ['Something went wrong'] });
     return;
 }
+
+//add middleware which handle CORS problems
+app.use((request, response, next) => {
+    response.header("Access-Control-Allow-Origin", '*');
+    response.header(
+        "Access-Control-Allow-Headers",
+        "Content-Type, Authorization"
+    );
+    if (request.method === 'OPTIONS'){
+        response.header('Access-Control-Allow-Methods', 'PU, GET');
+        return res.status(200).json({});
+    }
+    next();
+});
+
 
 //add middleware which parse in json the body of the post request.
 //limit means that the maximum body dimension in a post request is 1 megabyte
@@ -353,7 +363,7 @@ app.post('/get', [
         timeSeriesStartAfterOnePeriod = time.add(timeSeriesStart, granularity.number, granularity.key) - 1;
 
         //query database
-        try {/*
+        try {
             if (store === true) {
                 queryResult = await database.queryDeviceData(project, devices, keywords, aggrFun.name, aggrFun.code.toString(), timePeriod.key, timePeriod.number.toString(), granularity.key, granularity.number.toString(), start * 1000000000);
                 for (item of queryResult) {
@@ -370,7 +380,7 @@ app.post('/get', [
                         }
                     }
                 }
-            } else {*/
+            } else {
                 for (device of devices) {
                     for (keyword of keywords) {
                         if (!lastTime[device])
@@ -378,7 +388,7 @@ app.post('/get', [
                         lastTime[device].push({ keywordName: keyword, time: timeSeriesStartAfterOnePeriod });
                     }
                 }
-            //}
+            }
         } catch (err) {
             store = false;
             for (device of devices) {
