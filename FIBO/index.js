@@ -55,7 +55,7 @@ app.use((request, response, next) => {
         "Content-Type, Authorization"
     );
     if (request.method === 'OPTIONS'){
-        response.header('Access-Control-Allow-Methods', 'PU, GET');
+        response.header('Access-Control-Allow-Methods', 'PUT, GET');
         return res.status(200).json({});
     }
     next();
