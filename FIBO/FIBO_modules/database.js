@@ -297,7 +297,7 @@ class Database {
             for (let device of devices) {
                 const reader = this.createReaderQueryDeviceData(databaseClient, measurement, project, device, keywordQuery, aggrFunName, aggrFunCode, timePeriodKey, timePeriodLength, granularityKey, granularityNumber, start);
                 if (reader) {
-                    promises.push(this.query([device], keywordQuery, reader));
+                    promises.push(this.query([device], keywordArray, reader));
                 }
             }
             const result = await Promise.all(promises);
@@ -330,6 +330,7 @@ class Database {
             let deviceArray = [];
             let keywordQuery = '';
             let keywordArray = [];
+            
             for (let device of devices) {
                 deviceQuery += device;
                 deviceArray.push(device);
@@ -338,7 +339,6 @@ class Database {
                 keywordQuery += keyword;
                 keywordArray.push(keyword);
             }
-
             const reader = this.createReaderQueryDeviceData(databaseClient, measurement, project, deviceQuery, keywordQuery, aggrFunName, '4', timePeriodKey, timePeriodLength, granularityKey, granularityNumber, start);
             if (reader) {
                 promises.push(this.query(deviceArray, keywordArray, reader));

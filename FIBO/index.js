@@ -48,13 +48,14 @@ function genericError(err, request, response, next) {
 }
 
 //add middleware which handle CORS problems
+
 app.use((request, response, next) => {
     response.header("Access-Control-Allow-Origin", '*');
     response.header(
         "Access-Control-Allow-Headers",
         "Content-Type, Authorization"
     );
-    if (request.method === 'OPTIONS'){
+    if (request.method === 'OPTIONS') {
         response.header('Access-Control-Allow-Methods', 'PUT, GET');
         return res.status(200).json({});
     }
@@ -264,8 +265,15 @@ app.post('/get', [
         //true if granularity is sent as number
         const granularityIsNumeric = body.granularityIsNumeric;
 
+        //granularity used for store data in database
+        let granularityNumberForDB = 0;
+
         //point Number to Sent
         let pointNumber;
+
+        //TODO
+        //false only if querying FIBO database it does not find all the data
+        //let allData = true;
 
         //timeSeriesStart is the beginning of the time series that will be sent to the Client.
         let timeSeriesStart;
@@ -320,6 +328,7 @@ app.post('/get', [
         let granularityInSecond;
 
         if (granularityIsNumeric) {
+            pointNumber = granularity;
             //Using the rule defined in roundGran1 it rounds timeSeriesStart. Then it increments timeSeriesStart untill it is higher than start.
             if (store === true || timePeriod) {
                 timeSeriesStart = time.round(timeSeriesStart, rounder.roundGran1(timePeriodInSecond));
@@ -327,6 +336,7 @@ app.post('/get', [
             } else {
                 granularity = { key: 'second', number: Math.floor(timePeriodInSecond / granularity) };
             }
+
             //converting granularity in second
             granularityInSecond = time.convertSecond(granularity.number, granularity.key);
         } else {
@@ -334,16 +344,15 @@ app.post('/get', [
             granularityInSecond = time.convertSecond(granularity.number, granularity.key);
             //Using the rule defined in roundGran2 it rounds timeSeriesStart. Then it increments timeSeriesStart untill it is higher than start.
             timeSeriesStart = time.nearestMoment(time.round(timeSeriesStart, rounder.roundGran2(granularityInSecond)), granularity.number, granularity.key, start);
-        }
+            //calculating pointNumber
+            pointNumber = Math.floor((end - timeSeriesStart) / granularityInSecond);
 
-        //check 
-        if (granularityInSecond > timePeriodInSecond) {
-            response.status(400).json({ status: 400, errors: ['granularity higher than total Period Length'] });
-            return;
+            //check that granularity sent is not higher than total time period
+            if (granularityInSecond > timePeriodInSecond) {
+                response.status(400).json({ status: 400, errors: ['granularity higher than total Period Length'] });
+                return;
+            }
         }
-
-        //calculating pointNumber
-        pointNumber = Math.floor((end - timeSeriesStart) / granularityInSecond);
 
         if (pointNumber > MAX_POINT) {
             response.status(401).json({ status: 401, errors: ['too many points'] });
@@ -364,8 +373,14 @@ app.post('/get', [
 
         //query database
         try {
-            if (store === true) {
-                queryResult = await database.queryDeviceData(project, devices, keywords, aggrFun.name, aggrFun.code.toString(), timePeriod.key, timePeriod.number.toString(), granularity.key, granularity.number.toString(), start * 1000000000);
+            /*if (store === true) {
+
+                if (granularityIsNumeric)
+                    granularityNumberForDB = (timePeriodInSecond / pointNumber);
+                else
+                    granularityNumberForDB = granularity.number;
+
+                queryResult = await database.queryDeviceData(project, devices, keywords, aggrFun.name, aggrFun.code.toString(), timePeriod.key, timePeriod.number.toString(), granularity.key, granularityNumberForDB.toString(), start * 1000000000);
                 for (item of queryResult) {
                     const timeSeriesLength = item.timeSeries.length;
                     for (device of item.device) {
@@ -380,7 +395,7 @@ app.post('/get', [
                         }
                     }
                 }
-            } else {
+            } else {*/
                 for (device of devices) {
                     for (keyword of keywords) {
                         if (!lastTime[device])
@@ -388,7 +403,7 @@ app.post('/get', [
                         lastTime[device].push({ keywordName: keyword, time: timeSeriesStartAfterOnePeriod });
                     }
                 }
-            }
+            //}
         } catch (err) {
             store = false;
             for (device of devices) {
@@ -420,7 +435,6 @@ app.post('/get', [
                 //simulate query
                 if (!periodsList[keyword.time]) {
                     periodsList[keyword.time] = time.createPeriods(keyword.time, granularity.number, granularity.key, end);
-                    //console.log(keyword.time, periodsList[keyword.time]);
                 }
                 //generate random time Serie
                 keyword.periods = createTimeSeries(periodsList[keyword.time], 50);
@@ -440,17 +454,21 @@ app.post('/get', [
             .catch(err => console.error(err));
 /*
         if (store === true) {
+
             //add calculate data to data obtained from database
             for (let i = 0; i < queryResult.length; i++) {
-                queryResult[i].timeSeries = [...queryResult[i].timeSeries, ...result[i].timeSeries];
+                if (result[i]) {
+                    queryResult[i].timeSeries = [...queryResult[i].timeSeries, ...result[i].timeSeries];
+                }
             }
+
             //save new data in database
-            database.writeDeviceData(project, result, aggrFun.name, aggrFun.code.toString(), timePeriod.key, timePeriod.number.toString(), granularity.key, granularity.number.toString())
+            database.writeDeviceData(project, result, aggrFun.name, aggrFun.code.toString(), timePeriod.key, timePeriod.number.toString(), granularity.key, granularityNumberForDB.toString())
                 .catch(err => console.error(err));
 
             result = queryResult;
-        }*/
-
+        }
+*/
         response.status(200).json({ status: 200, result, pointNumber, timeSeriesStart });
 
     } catch (err) {
