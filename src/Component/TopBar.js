@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import YAML from 'js-yaml';
 import './TopBar.css';
+import logo from '../zer.png';
 
 
 class TopBar extends Component {
@@ -40,7 +41,8 @@ class TopBar extends Component {
     render() {
         return (
             <div className="topnav">
-                <p>Wizard</p>
+                <img src={logo} alt="logo"></img>
+                <p>ZYC</p>
                 <button
                     className="link-button"
                     onClick={() => this.props.downloadFile()}>

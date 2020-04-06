@@ -17,41 +17,39 @@ class DataAccord extends Component {
 
     constructor(props) {
         super(props)
-        const items=data.datatype.map((key)=> {
+        const items = data.datatype.map((key) => {
             return {
                 label: key.name,
                 value: key.name
-                
+
             }
         })
         this.state = {
-            time1: [],
-            time2: [],
-            items:items
+            items: items
         }
     }
 
-    addChart(e,s) {
-        let res ={}
-        for(let i=0;i<chartprops.length;i++) {
-            if(chartprops[i].type===e) {
-                res=chartprops[i]
+    addChart(e, s) {
+        let res = {}
+        for (let i = 0; i < chartprops.length; i++) {
+            if (chartprops[i].type === e) {
+                res = chartprops[i]
                 break;
             }
         }
-        this.props.onChangeChart(res,s)
-        }
+        this.props.onChangeChart(res, s)
+    }
 
     render() {
 
-        const time=data.time
+        const time = data.time
         const charts = data.charts
 
-        const titles=[]
-        const dt=this.props.datas
-        for(let i=0;i<dt.length;i++){
-            if(dt[i].title==="") titles.push([])
-            else titles.push([dt[i].title])            
+        const titles = []
+        const dt = this.props.datas
+        for (let i = 0; i < dt.length; i++) {
+            if (dt[i].title === "") titles.push([])
+            else titles.push([dt[i].title])
         }
 
         return (
@@ -60,23 +58,24 @@ class DataAccord extends Component {
                     {this.props.datas.map((row2, s) => {
                         return <AccordionTab key={s} header={row2.title}>
 
-                            <Button icon="pi pi-times" className="p-button-danger"
+                            <Button style={{ float: "right" }} icon="pi pi-times"
+                                className="p-button-danger"
                                 onClick={() => this.props.removeData(s)} />
                             <h3>Title</h3>
                             <Chips value={titles[s]}
                                 max={1}
                                 onChange={(e) => {
-                                    titles[s]=e.value
-                                    if(e.value.length===0) this.props.onChangeData("", s)
-                                    else this.props.onChangeData(titles[s][0], s)                                    
-                                    }}></Chips>
-                             <h3>Type</h3>
-                             <Dropdown value={row2.type}
+                                    titles[s] = e.value
+                                    if (e.value.length === 0) this.props.onChangeData("", s)
+                                    else this.props.onChangeData(titles[s][0], s)
+                                }}></Chips>
+                            <h3>Type</h3>
+                            <Dropdown value={row2.type}
                                 options={this.state.items}
                                 onChange={(e) => this.props.onChangeDType(e, s)}
-                                placeholder="Select a type aggregation" />
+                                placeholder="Select data type" />
 
-                        
+
                             <h3>Device</h3>
                             <Chips
                                 value={row2.variables.datasource.device}
@@ -118,8 +117,8 @@ class DataAccord extends Component {
                             <h4>Type</h4>
                             <Dropdown value={row2.chart.type}
                                 options={charts}
-                                onChange={(e) => this.addChart(e.value,s)}
-                                placeholder="Select a chart" />                            
+                                onChange={(e) => this.addChart(e.value, s)}
+                                placeholder="Select a chart" />
                         </AccordionTab>
 
                     })}
