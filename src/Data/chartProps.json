@@ -5,31 +5,29 @@
     {
         "type": "bar",
         "mainLabelX": "",
-        "maniLabelY": "",
+        "mainLabelY": "",
         "legendPosition": "bottom"
     },
     {
         "type": "bubble",
-                "mainLabelX": "",
-                "maniLabelY": "",
-                "legendPosition": "bottom",
-                "trendLine": false
+        "mainLabelX": "",
+        "maniLabelY": "",
+        "legendPosition": "bottom",
+        "trendLine": false
     },
     {
         "type": "column",
-                "mainLabelX": "",
-                "maniLabelY": "",
-                "legendPosition": "bottom"
-                
+        "mainLabelX": "",
+        "maniLabelY": "",
+        "legendPosition": "bottom"
     },
     {
         "type": "compass",
         "min": 0,
-        "max": 0,
+        "max": 100,
         "startAngle": "-180",
-        "endAngle": "180",
-        "label": ""
-    } ,
+        "endAngle": "180"
+    },
     {
         "type": "donut",
         "legendPosition": "bottom"
@@ -37,20 +35,18 @@
     {
         "type": "gauge",
         "min": 0,
-        "max": 0,
+        "max": 100,
         "startAngle": "-180",
-        "endAngle": "180",
-        "label": ""
+        "endAngle": "180"
     },
     {
-        "type":"histogram"
+        "type": "histogram"
     },
     {
         "type": "icon",
         "icon": "",
-        "valuePosition": "right",
-        "label": ""
-    } ,
+        "valuePosition": "right"
+    },
     {
         "type": "line",
         "mainLabelX": "",
@@ -59,14 +55,14 @@
         "lineType": "point"
     },
     {
-        "type":"map"
+        "type": "map"
     },
     {
-        "type":"pie",
+        "type": "pie",
         "legendPosition": "bottom"
     },
     {
-        "type":"stacked"
+        "type": "stacked"
     },
     {
         "type": "scatter",

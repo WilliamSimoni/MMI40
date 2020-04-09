@@ -12,6 +12,8 @@ import { Dropdown } from 'primereact/dropdown';
 import './App.css';
 import data from './Data/const.json'
 import datatype from './Data/dataType.json'
+import AlgChart from './Algchart'
+import { Sidebar } from 'primereact/sidebar';
 
 import 'primereact/resources/themes/nova-light/theme.css';
 import 'primereact/resources/primereact.min.css';
@@ -35,6 +37,13 @@ class App extends Component {
             projectname: [],
             alldata: [],
 
+            alarmval: [],
+
+            nuser: 0,
+            users: [],
+
+            visible: false
+
         }
 
     }
@@ -46,9 +55,20 @@ class App extends Component {
             projectname: this.state.projectname[0],
             template: this.state.template,
             roles: this.state.roles,
-            views: { view: [] },
+            views: [],
 
+
+            users: this.state.users,
             datatype: data.datatype
+
+        }
+
+
+        for (let d = 0; d < this.state.nuser; d++) {
+            const h = yamlcomp.users[d]
+            const s = h.name[0]
+            h.name = s
+
         }
         let pages = []
 
@@ -63,7 +83,7 @@ class App extends Component {
             })
 
         }
-        yamlcomp.views.view = pages
+        yamlcomp.views = pages
 
         const yaml = YAML.stringify(yamlcomp);
         const blob = new Blob([yaml], { type: 'application/x-yaml' });
@@ -84,7 +104,9 @@ class App extends Component {
         const roles = this.state.rolespage
         const alldata = this.state.alldata
         const npage = this.state.value + 1
+        const alarm = this.state.alarmval
 
+        const nalarm = []
         const inse = ['NewPage']
         const rol = []
         const agd = []
@@ -97,17 +119,18 @@ class App extends Component {
         nome.push(inse)
         roles.push(rol)
         alldata.push(data)
+        alarm.push(nalarm)
 
-        
         this.setState({
             aggdiv: aggdiv,
             value: npage,
             name: nome,
             rolespage: roles,
-            alldata: alldata
+            alldata: alldata,
+            alarmval: alarm
         })
 
-        
+
 
     }
 
@@ -117,37 +140,45 @@ class App extends Component {
         const roles = this.state.rolespage
         const alldata = this.state.alldata
         const npage = this.state.value - 1
+        const alarm = this.state.alarmval
 
         aggdiv.splice(n, 1)
         nome.splice(n, 1)
         roles.splice(n, 1)
         alldata.splice(n, 1)
+        alarm.splice(n, 1)
+
 
         this.setState({
             aggdiv: aggdiv,
             value: npage,
             name: nome,
             rolespage: roles,
-            alldata: alldata
+            alldata: alldata,
+            alarmval: alarm
         })
 
     }
 
-    addData(i,h) {
+    addData(i, h) {
 
         const agdv = this.state.aggdiv
         const aggdiv = agdv[i]
         const data = this.state.alldata
         const datai = data[i].datas
-        const k = data[i].value+1
+        const k = data[i].value + 1
+
+        const alarm = this.state.alarmval
+        const alarm1 = alarm[i]
+        alarm1.push(false)
 
         const agd = []
         //const name = 'NewData'+h
-       
-        
-        let name2 /*= {
-            title: name,
+
+        const name2 = {
+            title: "Newdata" + k,
             type: h,
+            alarm: undefined,
             variables: {
                 datasource: {
                     device: [],
@@ -167,42 +198,55 @@ class App extends Component {
             },
             lex: '...',
 
-        } */
-        for(let i=0;i<datatype.length;i++){
-            if(h===datatype[i].type) {
-                name2=datatype[i].data
+        }
+        for (let ri = 0; ri < datatype.length; ri++) {
+            if (h === "empty") break;
+            if (h === datatype[ri].type) {
+                const dtk = datatype[ri].data
+                name2.title = dtk.title
+                name2.type = dtk.type
+                name2.variables.aggregationfunction = dtk.variables.aggregationfunction
+                name2.timeinterval = dtk.timeinterval
+                name2.granularity = dtk.granularity
+                name2.chart = dtk.chart
                 break;
             }
         }
-        aggdiv.push(agd)
         datai.push(name2)
+        aggdiv.push(agd)
+
 
         data[i].value = k
         data[i].datas = datai
 
         this.setState({
             aggdiv: agdv,
-            alldata: data
+            alldata: data,
+            alarmval: alarm
         })
 
     }
 
-    removeData(n,i) {
+    removeData(n, i) {
         const agdv = this.state.aggdiv
         const aggdiv = agdv[i]
         const data = this.state.alldata
         const datai = data[i].datas
-        const k = data[i].value-1
+        const k = data[i].value - 1
+        const alarm = this.state.alarmval
+        const alarm1 = alarm[i]
 
+        alarm1.splice(n, 1)
         aggdiv.splice(n, 1)
         datai.splice(n, 1)
-        
+
         data[i].value = k
         data[i].datas = datai
 
         this.setState({
             aggdiv: agdv,
-            alldata: data
+            alldata: data,
+            alarmval: alarm
         })
 
     }
@@ -255,19 +299,25 @@ class App extends Component {
     }
 
     UploadFile(value) {
-        const na = value.views.view;
+        let alarm = []
+        const na = value.views;
         let pages = []
         let addmi = []
         let data = []
         let aggdiv = []
         for (let i = 0; i < na.length; i++) {
+
             pages.push([na[i].viewname])
             addmi.push({ admittedroles: na[i].admittedroles })
             const k = na[i].data
             const l = k.length
-
+            const alarm2 = []
             const aggdivm = []
             for (let h = 0; h < l; h++) {
+                if (k[h].alarm === undefined) alarm2.push(false)
+                else alarm2.push(true)
+
+
                 const agg = k[h].variables.aggregationfunction.aggregated
                 const div = k[h].variables.aggregationfunction.divided
                 if (agg.length == 2) {
@@ -299,6 +349,13 @@ class App extends Component {
             }
             aggdiv.push(aggdivm)
             data.push(f)
+            alarm.push(alarm2)
+        }
+        const nuser = value.users.length
+        for (let d = 0; d < nuser; d++) {
+            const us = value.users[d]
+            const s = [us.name]
+            us.name = s
         }
 
         this.setState({
@@ -308,10 +365,13 @@ class App extends Component {
             value: na.length,
             name: pages,
 
-
+            alarmval: alarm,
             roles: value.roles,
             template: value.template,
             alldata: data,
+
+            users: value.users,
+            nuser: nuser
 
         })
 
@@ -321,6 +381,17 @@ class App extends Component {
             detail: 'File Loaded'
         });
 
+    }
+
+    genPassword() {
+        const size = 8
+        const char = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+        const leng = char.length
+        var pass = "";
+        for (let i = 0; i < size; ++i) {
+            pass += char.charAt(Math.floor(Math.random() * leng));
+        }
+        return pass;
     }
 
     render() {
@@ -336,28 +407,88 @@ class App extends Component {
 
         return (
             <div>
+                <Sidebar visible={this.state.visible} position="right" 
+                style={{width:'30em'}}
+                onHide={(e) => this.setState({ visible: false })}>
+                    <AlgChart></AlgChart>
+                </Sidebar>
                 <TopBar downloadFile={this.downloadFile}
-                    handleState={(value) => this.UploadFile(value)} />
+                    handleState={(value) => this.UploadFile(value)} 
+                    openSide={(e)=> this.setState({visible: e})}/>
 
                 <div id="main" className="Accord">
                     <Growl ref={(el) => this.growl = el} />
-                     
+
 
                     <Accordion>
                         <AccordionTab header="General">
                             <div className="container">
-
                                 <h3>Project Name: {this.state.projectname[0]}</h3>
-                                <Chips value={this.state.projectname}  
-                                onChange={(e) => this.setState({ projectname: e.value})}
-                                max={1}
-                                tooltip="Premere Enter per confermare"></Chips>
-                                
+                                <Chips value={this.state.projectname}
+                                    onChange={(e) => this.setState({ projectname: e.value })}
+                                    max={1}
+                                    tooltip="Premere Enter per confermare"></Chips>
+
 
                                 <h3>Roles</h3>
-                                <Chips 
+                                <Chips
                                     value={this.state.roles}
                                     onChange={(e) => this.setState({ roles: e.value })}></Chips>
+
+                                <h3>Users</h3>
+                                <Button label="Add Users" icon="pi pi-check"
+                                    onClick={() => {
+                                        const z = {
+                                            name: [],
+                                            pass: this.genPassword(),
+                                            role: ""
+                                        }
+                                        const k = this.state.users
+                                        k.push(z)
+                                        const users = this.state.nuser + 1
+                                        this.setState({
+                                            nuser: users,
+                                            users: k
+                                        })
+                                    }
+                                    }></Button>
+
+
+                                {this.state.users.map((row, i) => {
+                                    return <div>
+                                        <Chips style={{ size: "150" }} value={row.name}
+                                            onChange={(e) => {
+                                                const k = this.state.users
+                                                k[i].name = e.value
+                                                this.setState({ users: k })
+                                            }}
+                                            max={1}
+                                            tooltip="Premere Enter per confermare"></Chips>
+                                        <Dropdown value={row.role}
+                                            options={role}
+                                            onChange={(e) => {
+                                                const k = this.state.users
+                                                k[i].role = e.value
+                                                this.setState({ users: k })
+                                            }}
+                                            placeholder="Select a role" />
+                                        <Button
+                                            icon="pi pi-times" className="p-button-danger"
+                                            onClick={() => {
+                                                const z = this.state.users
+                                                z.splice(i, 1)
+                                                const users = this.state.nuser - 1
+                                                this.setState({
+                                                    nuser: users,
+                                                    users: z
+                                                })
+                                            }} />
+
+
+                                    </div>
+                                })}
+
+
 
                                 <h3>Template</h3>
                                 <Dropdown value={this.state.template}
@@ -372,14 +503,15 @@ class App extends Component {
 
                     </Accordion>
                     <h2>Views</h2>
-                    <Button label="Add" icon="pi pi-plus" 
-                              onClick={() => this.addPage()}/>
+                    <Button label="Add" icon="pi pi-plus"
+                        onClick={() => this.addPage()} />
                     <AccTab names={this.state.name}
                         cancelButton={(i) => { this.cancelPage(i) }}
-                        addData={(i,h)=> {this.addData(i,h)}}
-                        removeData={(s,i) => {this.removeData(s,i)}}
+                        addData={(i, h) => { this.addData(i, h) }}
+                        removeData={(s, i) => { this.removeData(s, i) }}
                         onChange1={(e, i) => { this.onChange1(e, i) }}
                         alldata={this.state.alldata}
+                        alarm={this.state.alarmval}
                         rolespage={this.state.rolespage}
                         aggdiv={this.state.aggdiv}
                         role={role}
@@ -430,14 +562,14 @@ class App extends Component {
                                 split[1] = e
                                 k[i].datas[s].timeinterval = split.join(" ")
                             }
-                            
+
                             this.setState({
                                 alldata: k
                             })
                         }}
-                        onChangeGran={(e, s, i,n) => {
+                        onChangeGran={(e, s, i, n) => {
                             const k = this.state.alldata
-                            const gran= k[i].datas[s].granularity
+                            const gran = k[i].datas[s].granularity
                             const split = gran.split(" ")
                             if (n == 0) {
                                 split[0] = e.target.value
@@ -458,9 +590,43 @@ class App extends Component {
                             })
                         }}
 
-                        onChangeDType={(e,s,i)=> {
+                        onChangeAlarmval={(e, s, i) => {
+                            const k = this.state.alarmval
+                            const z = this.state.alldata
+                            k[i][s] = e.target.value
+                            if (k[i][s] == true) {
+                                z[i].datas[s].alarm = {
+                                    maxthreshold: 1,
+                                    minthreshold: 0
+                                }
+                            } else {
+                                z[i].datas[s].alarm = undefined
+                            }
+                            this.setState({
+                                alarmval: k
+                            })
+                        }}
+
+                        onChangeAlarmth={(e, s, i, val) => {
+                            const z = this.state.alldata
+                            if (val === 1) z[i].datas[s].alarm.maxthreshold = e.target.value
+                            else z[i].datas[s].alarm.minthreshold = e.target.value
+                            this.setState({
+                                alldata: z
+                            })
+
+                        }}
+
+                        onChangeDType={(e, s, i) => {
                             const k = this.state.alldata
                             k[i].datas[s].type = e.target.value
+                            this.setState({
+                                alldata: k
+                            })
+                        }}
+                        onChangeChartProps={(e, s, i) => {
+                            const k = this.state.alldata
+                            k[i].datas[s].chart[e.target.name] = e.target.value
                             this.setState({
                                 alldata: k
                             })

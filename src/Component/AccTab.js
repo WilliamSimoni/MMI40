@@ -3,14 +3,15 @@ import { Accordion, AccordionTab } from 'primereact/accordion';
 import { MultiSelect } from 'primereact/multiselect';
 import { Button } from 'primereact/button';
 import { Chips } from 'primereact/chips';
-import { SplitButton } from 'primereact/splitbutton';
+//import { SplitButton } from 'primereact/splitbutton';
 
 import DataAccord from './DataAccord.js'
-import data from '../Data/const.json'
+//import data from '../Data/const.json'
 
 import 'primereact/resources/themes/nova-light/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
+
 
 class AccTab extends Component {
 
@@ -20,20 +21,23 @@ class AccTab extends Component {
             name: [],
         }
     }
-
+/*
+<SplitButton label="Add" icon="pi pi-plus"
+                            onClick={() => this.props.addData(i, "empty")} model={items}></SplitButton>
+*/
     render() {
 
         return (
             <Accordion>
 
                 {this.props.names.map((row, i) => {
-                    const items = data.datatype.map((key) => {
+                   /* const items = data.datatype.map((key) => {
                         return {
                             label: key.name,
                             icon: 'pi pi-plus',
                             command: () => this.props.addData(i, key.name)
                         }
-                    })
+                    })*/
                     return <AccordionTab key={i} header={row}>
                         <Button style={{ float: "right" }}
                             icon="pi pi-times" className="p-button-danger"
@@ -50,11 +54,12 @@ class AccTab extends Component {
                             filter={true} filterPlaceholder="Search" placeholder="Choose Role" />
 
                         <h3>New Data</h3>
-                        <SplitButton label="Add" icon="pi pi-plus"
-                            onClick={() => this.props.addData(i, "empty")} model={items}></SplitButton>
+                        <Button label="Add" icon="pi pi-plus"
+                            onClick={() => this.props.addData(i, "empty")}></Button>
 
                         <DataAccord datas={this.props.alldata[i].datas}
                             removeData={(s) => { this.props.removeData(s, i) }}
+                            alarm={this.props.alarm[i]}
                             keyword={this.props.keyword}
                             aggtype={this.props.aggtype}
                             aggr={this.props.aggdiv[i]}
@@ -67,6 +72,10 @@ class AccTab extends Component {
                             onChangeGran={(e, s, n) => { this.props.onChangeGran(e, s, i, n) }}
                             onChangeChart={(e, s) => { this.props.onChangeChart(e, s, i) }}
                             onChangeDType={(e, s) => { this.props.onChangeDType(e, s, i) }}
+                            onChangeAlarmval={(e, s) => { this.props.onChangeAlarmval(e, s, i) }}
+                            onChangeAlarmth={(e,s,val) => {this.props.onChangeAlarmth(e, s,i,val)}}
+                            onChangeChartProps={(e,s)=> this.props.onChangeChartProps(e,s,i)}
+                            
 
                         />
                     </AccordionTab>;

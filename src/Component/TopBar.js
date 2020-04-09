@@ -63,6 +63,13 @@ class TopBar extends Component {
                     <i className="pi pi-upload"></i>
                     Upload
                 </button>
+ 
+                <button
+                    className="link-button"
+                    onClick={()=>this.props.openSide(true)}>
+                    <i className="pi pi-arrow-right"></i>
+                    Algoritmo
+                </button>
             </div>
         );
     }

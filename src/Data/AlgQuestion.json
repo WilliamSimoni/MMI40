@@ -1,0 +1,65 @@
+{
+
+    "q1": [
+        { "label": "Voglio evidenziare un singolo valore.", "value": "q2" },
+            { "label": "Voglio mostrare differenze o affinita tra i valori di una o più variabili.", "value": "q3" },
+            { "label": "Voglio mostrare la composizione di varie variabili.", "value": "q10" },
+            { "label": "Voglio mostrare l'andamento nel tempo (e quindi il trend) di una o più variabili.", "value": "q23" },
+            { "label": "Voglio mostrare le relazioni che intercorrono tra varie variabili.", "value": "q24" },
+            { "label": "Voglio mostrare la distribuzione dei valori di una o più variabili.", "value": "q28" }
+    ],
+
+    "q3": [
+        { "label": "In base a vari periodi o momenti temporali.", "value": "q4" },
+        { "label": "in base a un singolo periodo o momento temporale.", "value": "q7" }
+    ],
+    "q4": [
+        { "label": "una o due.", "value": "q5" },
+        { "label": "più di due.", "value": "q6" }
+    ],
+    "q5": [
+        { "label": "Pochi (meno di 7/8)", "value": "q11" },
+        { "label": "Molti.", "value": "q12" }
+    ],
+    "q7": [
+        { "label": "una o due.", "value": "q8" },
+        { "label": "più di due.", "value": "q9" }
+    ],
+    "q10": [
+        { "label": "Composizione delle variabili in un determinato momento o periodo.", "value": "q13" },
+        { "label": "Composizione delle variabili in vari momenti o periodi", "value": "q16" }
+    ],
+    "q13": [
+        { "label": "una.", "value": "q14" },
+        { "label": "più di una.", "value": "q15" }
+    ],
+    "q16": [
+        { "label": "Pochi (massimo 3/4).", "value": "q17" },
+        { "label": "molti.", "value": "q20" }
+    ],
+    "q17": [
+        { "label": "Voglio evidenziare come ogni parte della composizione contribuisce sull'intera composizione.", "value": "q18" },
+        { "label": "Voglio mostrare sia come le parti contribuiscono alla composizione, ma anche come l'intera composizione varia nel tempo", "value": "q19" }
+    ],
+    "q20": [
+        { "label": "Voglio evidenziare come ogni parte della composizione contribuisce sull'intera composizione.", "value": "q21" },
+        { "label": "Voglio mostrare sia come le parti contribuiscono alla composizione, ma anche come l'intera composizione varia nel tempo", "value": "q22" }
+    ],
+    "q23": [
+        { "label": "Pochi (meno di 7/8).", "value": "q31" },
+        { "label": "molti.", "value": "q32" }
+    ],
+    "q24": [
+        { "label": "in coppia.", "value": "q25" },
+        { "label": "in gruppi di tre.", "value": "q26" },
+        { "label": "piu di tre.", "value": "q27" }
+    ],
+    "q28": [
+        { "label": "Una.", "value": "q29" },
+        { "label": "Due.", "value": "q30" }
+    ],
+    "q31": [
+        { "label": "Una o due.", "value": "q32" },
+        { "label": "Più di due.", "value": "q33" }
+    ]
+}

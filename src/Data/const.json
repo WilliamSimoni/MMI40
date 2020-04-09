@@ -49,8 +49,19 @@
     "datatype": [
          {"name": "wind direction","unitofmeasure": "°"},
          {"name": "temperature","unitofmeasure": "°C"},
-         {"name": "portata","unitofmeasure": "m ^ 3 / s"},
-         {"name": "velocità di pompaggio","unitofmeasure": "l / s"}
+         {"name": "flow rate","unitofmeasure": "m ^ 3 / s"},
+         {"name": "pumping speed","unitofmeasure": "l / s"},
+         {"name": "speed","unitofmeasure": "m / s"},
+         {"name": "acceleration","unitofmeasure": "m/ s^2"},
+         {"name": "volume","unitofmeasure": "m^3"},
+         {"name": "energy","unitofmeasure": "kWh"},
+         {"name": "amperage","unitofmeasure": "A"},
+         {"name": "frequency","unitofmeasure": "Hz"},
+         {"name": "voltage","unitofmeasure": "V"},
+         {"name": "liter","unitofmeasure": "l"},
+         {"name": "range","unitofmeasure": "m"},
+         {"name": "weight","unitofmeasure": "g"},
+         {"name": "general","unitofmeasure": "u"}
     ]
     
 
