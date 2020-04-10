@@ -20,7 +20,8 @@ async function send(request) {
     const options = {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IldpbGxpYW0iLCJwcm9qZWN0bmFtZSI6ImZlcnJhcmkiLCJyb2xlaWQiOiJhMzQxNmIyZS04MTFiLTQyYTYtYWZlZi0yYzdlODFhMWI3YWYiLCJpYXQiOjE1ODY1MzMxNTEsImV4cCI6MTU4NjYxOTU1MX0.P9E3TcSWNEf7ieYcek2yBUo-VexEr-kZGEUn1lCNaZU'
         },
         body: JSON.stringify(request),
     };
@@ -37,16 +38,21 @@ start: moment.utc().subtract(2,'week').startOf('week').unix(),
 
 const request = {
     projectName: 'pierucci',
-    device: ['pompa', 'caldaia'],
-    keyword: ['temperature', 'pompa'],
-    aggregationFunction: { name: 'sum', code: 3 },
-    timePeriod: {key: 'minute', number: 10},
-    granularity: 10,
+    device: ['AE252', 'Second'],
+    keyword: ['portata', 'temperature', "something else", "another thing", "and yet another one"],
+    aggregationFunction: { name: 'sum', code: 4 },
+    timePeriod: {key: 'minute', number: 2},
+    granularity: {key: 'minute', number: 0.5},
     unit:'s',
     store: true
 }
 
 //console.log(JSON.stringify(request, null, 2));
 
+const loginRequest = {
+    username:'William',
+    password:'12345678',
+    projectName: 'ferrari'
+}
 
-send(request).then((json) => {console.log(json.result[0])});
+send(request).then((json) => {console.log(json)}).catch(err => console.log(err));
