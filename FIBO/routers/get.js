@@ -328,19 +328,13 @@ router.post('/', [
         let queryResult = [];
 
         timeSeriesStartAfterOnePeriod = time.add(timeSeriesStart, granularity.number, granularity.key) - 1;
-        console.log(timeSeriesStart, timeSeriesStartAfterOnePeriod, granularity);
+        //console.log(timeSeriesStart, timeSeriesStartAfterOnePeriod, granularity);
         //query database
         try {
-            if (store === true) {
+            /*if (store === true) {
 
                 granularityNumberForDB = granularity.number;
 
-                /*
-                if (granularityIsNumeric)
-                    granularityNumberForDB = (timePeriodInSecond / pointNumber);
-                else
-                    granularityNumberForDB = granularity.number;
-                */
 
                 queryResult = await database.queryDeviceData(project, devices, keywords, aggrFun.name, aggrFun.code.toString(), timePeriod.key, timePeriod.number.toString(), granularity.key, granularityNumberForDB.toString(), start * 1000000000, end * 1000000000);
 
@@ -367,7 +361,7 @@ router.post('/', [
                         }
                     }
                 }
-            } else {
+            } else {*/
                 for (device of devices) {
                     for (keyword of keywords) {
                         if (!lastTime[device])
@@ -375,7 +369,7 @@ router.post('/', [
                         lastTime[device].push({ keywordName: keyword, time: timeSeriesStartAfterOnePeriod });
                     }
                 }
-            }
+            //}
         } catch (err) {
             store = false;
             for (device of devices) {
@@ -414,7 +408,7 @@ router.post('/', [
         result = await calculator.aggrFun(aggrFun.name, aggrFun.code, lastTime)
 
 
-        if (store === true) {
+        /*if (store === true) {
 
             //add calculate data to data obtained from database
             for (let i = 0; i < queryResult.query.length; i++) {
@@ -427,7 +421,7 @@ router.post('/', [
             database.writeDeviceData(project, result, aggrFun.name, aggrFun.code.toString(), timePeriod.key, timePeriod.number.toString(), granularity.key, granularityNumberForDB.toString())
                 .catch(err => console.error(err));
             result = queryResult.query;
-        }
+        }*/
         response.status(200).json({ status: 200, result, pointNumber, timeSeriesStart });
 
     } catch (err) {
