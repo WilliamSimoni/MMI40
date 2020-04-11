@@ -5,9 +5,10 @@ import logo from '../zer.png';
 
 
 class TopBar extends Component {
+
+    /* *Constructor */
     constructor(props) {
         super(props);
-        // eslint-disable-next-line no-unused-vars
         this.fileReader= null;
         this.handleFileRead = this.handleFileRead.bind(this);
         this.handleFileChosen = this.handleFileChosen.bind(this);
@@ -24,13 +25,25 @@ class TopBar extends Component {
 
     }
 
-
-    handleFileRead = (e) => {
+/**
+ * Transform the file read as a Text in a YAML Object
+ */
+    handleFileRead = () => {
         const content = this.fileReader.result;
 
-        const obj = YAML.load(content)
-        this.props.handleState(obj);
+        try {
+            const obj = YAML.load(content)
+            this.props.handleState(obj);
+        } catch(e) {
+            console.log(e)
+            this.props.handleState(null)
+        }
+        
     }
+    /**
+ * Read a file as Text
+ * @param {File} file - Key of the view where add the new data.
+ */
     handleFileChosen = (file) => {
         this.fileReader = new FileReader();
         this.fileReader.onloadend = this.handleFileRead;
@@ -41,8 +54,10 @@ class TopBar extends Component {
     render() {
         return (
             <div className="topnav">
+                {/* * Logo */}
                 <img src={logo} alt="logo"></img>
                 <p>ZYC</p>
+                {/* * Button to download */}
                 <button
                     className="link-button"
                     onClick={() => this.props.downloadFile()}>
@@ -50,20 +65,21 @@ class TopBar extends Component {
                     Download
                 </button>
 
+{/* * Input to select the file */}
                 <input
                     type="file"
                     className="inputfile"
                     ref={this.setTextInputRef}
                     onChange={e => this.handleFileChosen(e.target.files[0])}
                 />
-
+{/* * Button to upload */}
                 <button
                     className="link-button"
                     onClick={this.focusTextInput}>
                     <i className="pi pi-upload"></i>
                     Upload
                 </button>
- 
+ {/* * Button to open the chart algorithm */}
                 <button
                     className="link-button"
                     onClick={()=>this.props.openSide(true)}>

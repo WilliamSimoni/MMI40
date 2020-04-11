@@ -62,7 +62,31 @@
          {"name": "range","unitofmeasure": "m"},
          {"name": "weight","unitofmeasure": "g"},
          {"name": "general","unitofmeasure": "u"}
-    ]
+    ],
+
+    "dataformat": {
+        "title": "Newdata",
+        "type": "",
+        "alarm": "undefined",
+        "variables": {
+            "datasource": {
+                "device": [],
+                "keyword": []
+
+            },
+            "aggregationfunction": {
+                "type": "",
+                "aggregated": [],
+                "divided": []
+            }
+        },
+        "timeinterval": "1 seconds",
+        "granularity": "1",
+        "chart": {
+            "type": ""
+        }
+
+    }
     
 
 }

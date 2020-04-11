@@ -7,18 +7,27 @@ import { Dropdown } from 'primereact/dropdown';
 
 import algquest from './Data/AlgQuestion.json'
 
-
+/* *
+   * Class tha contains the algorithm
+   * Algorithm proposes some questions regarding the data 
+   * and based on the choices it returns one or more types of graph 
+   * to choose to better visualize the data
+*/
 class AlgChart extends Component {
 
-    constructor(props) {
-        super(props)
+    constructor() {
+        super()
         this.state = {
             q1: ""
         }
     }
 
+/**
+ * Select the new question based on the previous answer
+ * @param {String} i - String of the new question.
+ * @return {Element} Element of the new question to display.
+ */
     question(i) {
-        console.log(i)
         switch (i) {
             case "q1":
                 return <div>
@@ -218,8 +227,6 @@ class AlgChart extends Component {
 
 
     render() {
-
-
         return (
             <div>
 
