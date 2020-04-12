@@ -69,12 +69,14 @@ app.use((request, response, next) => {
 
 //add middleware which parse in json the body of the post request.
 //limit means that the maximum body dimension in a post request is 1 megabyte
-app.use(express.json({ limit: '1mb' }));
-
+app.use('/get',express.json({ limit: '1mb' }));
 app.use('/get', auth.checkToken);
 app.use('/get', get);
 
+
+app.use('/login',express.json({ limit: '1mb' }));
 app.use('/login', login);
+
 app.use('/logout', logout);
 
 //middleware to handling error
