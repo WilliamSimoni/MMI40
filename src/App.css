@@ -1,38 +1,19 @@
 
 
 .Accord {
-  
-    margin-left: 125px;
-    padding-top: 0px;
-    margin-right: 125px;
-    margin-bottom: 75px;
+  position: fixed;
+  top: 70px;
+  height: calc(100% - 80px);
+  box-sizing: border-box;
+  width: 100%;
+  overflow: auto;
+  padding-right: 25px;
+  padding-left: 25px;
+  bottom: 70px;
 }
 
 .container {
-    width: 1000px;
-    margin: auto;
     padding: 10px;
-    padding-bottom: 30px;
+    margin-bottom: 30px;
    
   }
-  
-  .one {
-    width: 500px;
-    padding-left: 15px;
-    float: left;
-    
-  }
-  
-  .two {
-    
-    width: 500px;
-    
-    margin-left: 50%;
-    
-  }
-
-  .element {
-    width: 25%;
-    display: inline-block;
-  }
-

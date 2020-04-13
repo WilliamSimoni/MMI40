@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import YAML from 'js-yaml';
 import './TopBar.css';
-import logo from '../zer.png';
+import logo from '../wh.jpg';
 
 
 class TopBar extends Component {
@@ -56,7 +56,6 @@ class TopBar extends Component {
             <div className="topnav">
                 {/* * Logo */}
                 <img src={logo} alt="logo"></img>
-                <p>ZYC</p>
                 {/* * Button to download */}
                 <button
                     className="link-button"

@@ -18,7 +18,7 @@ export default function addData(i,state) {
 
 
     const name2 = {
-        title: "Newdata",
+        title: "Newdata"+datai.length,
         type: "",
         alarm: undefined,
         variables: {

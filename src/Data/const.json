@@ -1,8 +1,6 @@
 {
     "template":[        
-            { "label": "Standard", "value": "Standard" },
-            { "label": "TemplateA", "value": "TemplateA" },
-            { "label": "TemplateB", "value": "TemplateB" }        
+            { "label": "Standard", "value": "Standard" }      
     ],
 
     "time" : [

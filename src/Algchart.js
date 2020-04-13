@@ -28,11 +28,15 @@ class AlgChart extends Component {
  * @return {Element} Element of the new question to display.
  */
     question(i) {
+        const styleD={
+            width: "90%"
+        }
         switch (i) {
             case "q1":
                 return <div>
                     <h3>Che informazione vuoi trasmettere all'utente?</h3>
-                    <Dropdown value={this.state.q1}
+                    <Dropdown style={styleD} value={this.state.q1}
+                    maxLength={10}
                         options={algquest.q1}
                         onChange={(e) => this.setState({ q1: e.value })}
                         placeholder="Seleziona la risposta" />
@@ -46,7 +50,7 @@ class AlgChart extends Component {
 
             case "q3":
                 return <div><h3>Come intendi confrontare i valori delle variabili?</h3>
-                    <Dropdown value={this.state.q3}
+                    <Dropdown style={styleD} value={this.state.q3}
                         options={algquest.q3}
                         onChange={(e) => this.setState({ q3: e.value })}
                         placeholder="Seleziona la risposta" />
@@ -55,7 +59,7 @@ class AlgChart extends Component {
 
             case "q4":
                 return <div><h3>Quante sono le variabili?</h3>
-                    <Dropdown value={this.state.q4}
+                    <Dropdown style={styleD} value={this.state.q4}
                         options={algquest.q4}
                         onChange={(e) => this.setState({ q4: e.value })}
                         placeholder="Seleziona la risposta" />
@@ -64,7 +68,7 @@ class AlgChart extends Component {
 
             case "q5":
                 return <div><h3>Quanti sono i periodi/momenti?</h3>
-                    <Dropdown value={this.state.q5}
+                    <Dropdown style={styleD} value={this.state.q5}
                         options={algquest.q5}
                         onChange={(e) => this.setState({ q5: e.value })}
                         placeholder="Seleziona la risposta" />
@@ -76,7 +80,7 @@ class AlgChart extends Component {
                 vari momenti o periodi. Questo significa che il grafico più adatto è un Line Chart.</div>
             case "q7":
                 return <div><h3>Quante sono le variabili?</h3>
-                    <Dropdown value={this.state.q7}
+                    <Dropdown style={styleD} value={this.state.q7}
                         options={algquest.q7}
                         onChange={(e) => this.setState({ q7: e.value })}
                         placeholder="Seleziona la risposta" />
@@ -92,7 +96,7 @@ class AlgChart extends Component {
                 Bar Chart.</div>
             case "q10":
                 return <div><h3>Come vuoi che sia la composizione?</h3>
-                    <Dropdown value={this.state.q10}
+                    <Dropdown style={styleD} value={this.state.q10}
                         options={algquest.q10}
                         onChange={(e) => this.setState({ q10: e.value })}
                         placeholder="Seleziona la risposta" />
@@ -108,7 +112,7 @@ class AlgChart extends Component {
                     Line Chart.</div>
                 case "q13":
                     return <div><h3>Quante sono le composizioni che vuoi mostrare?</h3>
-                        <Dropdown value={this.state.q13}
+                        <Dropdown style={styleD} value={this.state.q13}
                             options={algquest.q13}
                             onChange={(e) => this.setState({ q13: e.value })}
                             placeholder="Seleziona la risposta" />
@@ -123,7 +127,7 @@ class AlgChart extends Component {
                 Chart.</div>
             case "q16":
                 return <div><h3>Quanti sono i periodi/momenti?</h3>
-                    <Dropdown value={this.state.q16}
+                    <Dropdown style={styleD} value={this.state.q16}
                         options={algquest.q16}
                         onChange={(e) => this.setState({ q16: e.value })}
                         placeholder="Seleziona la risposta" />
@@ -131,7 +135,7 @@ class AlgChart extends Component {
                 </div>
             case "q17":
                 return <div><h3>Cosa vuoi mostrare nello specico?</h3>
-                    <Dropdown value={this.state.q17}
+                    <Dropdown style={styleD} value={this.state.q17}
                         options={algquest.q17}
                         onChange={(e) => this.setState({ q17: e.value })}
                         placeholder="Seleziona la risposta" />
@@ -148,7 +152,7 @@ class AlgChart extends Component {
                 Column Chart o Stacked Area Chart.</div>
              case "q20":
                 return <div><h3>Cosa vuoi mostrare nello specico?</h3>
-                    <Dropdown value={this.state.q20}
+                    <Dropdown style={styleD} value={this.state.q20}
                         options={algquest.q20}
                         onChange={(e) => this.setState({ q20: e.value })}
                         placeholder="Seleziona la risposta" />
@@ -164,7 +168,7 @@ class AlgChart extends Component {
                 grafico migliore è uno Stacked Area Chart.</div>
             case "q23":
                 return <div><h3>Quanti sono i periodi/momenti?</h3>
-                    <Dropdown value={this.state.q23}
+                    <Dropdown style={styleD} value={this.state.q23}
                         options={algquest.q23}
                         onChange={(e) => this.setState({ q23: e.value })}
                         placeholder="Seleziona la risposta" />
@@ -172,7 +176,7 @@ class AlgChart extends Component {
                 </div>
             case "q24":
                 return <div><h3>Come sono relazionate le variabili?</h3>
-                    <Dropdown value={this.state.q24}
+                    <Dropdown style={styleD} value={this.state.q24}
                         options={algquest.q24}
                         onChange={(e) => this.setState({ q24: e.value })}
                         placeholder="Seleziona la risposta" />
@@ -183,13 +187,13 @@ class AlgChart extends Component {
                 grafico per queste evenienze è un Scatter Plot.</div>
             case "q26":
                 return <div>Vuoi mostrare le relazioni che intercorrono fra i valori di tre variabili. Il grafico
-                per queste evenienze èe un Bubble Chart.</div>
+                per queste evenienze è un Bubble Chart.</div>
             case "q27":
                 return <div>Vuoi mostrare le relazioni che intercorrono fra i valori di tante variabili. Non
                 c'è un grafico consigliato.</div>
             case "q28":
                 return <div><h3>Quante sono le variabili?</h3>
-                    <Dropdown value={this.state.q28}
+                    <Dropdown style={styleD} value={this.state.q28}
                         options={algquest.q28}
                         onChange={(e) => this.setState({ q28: e.value })}
                         placeholder="Seleziona la risposta" />
@@ -203,7 +207,7 @@ class AlgChart extends Component {
                 Scatter Plot.</div>
              case "q31":
                 return <div><h3>Quante sono le variabili?</h3>
-                    <Dropdown value={this.state.q31}
+                    <Dropdown style={styleD} value={this.state.q31}
                         options={algquest.q31}
                         onChange={(e) => this.setState({ q31: e.value })}
                         placeholder="Seleziona la risposta" />
@@ -229,7 +233,6 @@ class AlgChart extends Component {
     render() {
         return (
             <div>
-
                 {this.question("q1")}
             </div>
         )

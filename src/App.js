@@ -2,6 +2,7 @@
 import React, { Component } from 'react';
 import TopBar from './Component/TopBar.js'
 import Views from './Component/Views.js'
+import NameComp from './Component/NameComp.js'
 
 import { Accordion, AccordionTab } from 'primereact/accordion';
 import { Growl } from 'primereact/growl';
@@ -19,6 +20,7 @@ import DeleteData from './Function/DeleteData.js'
 import AddData from './Function/AddData.js'
 import AggFun from './Function/SetAggregationFun.js'
 import AlgChart from './Algchart'
+
 import { Sidebar } from 'primereact/sidebar';
 
 import 'primereact/resources/themes/nova-light/theme.css';
@@ -125,7 +127,7 @@ class App extends Component {
             <div>
                 {/* *Show the algorithm for the correct chart for a data*/}
                 <Sidebar visible={this.state.visible} position="right"
-                    style={{ width: '30em' }}
+                    style={{ width: '50%' }}
                     onHide={(e) => this.setState({ visible: false })}>
                     {/* * Component for the algorithm  */}
                     <AlgChart />
@@ -145,22 +147,26 @@ class App extends Component {
                         <AccordionTab header="General">
                             <div className="container">
                                 {/* * Input text for the project name */}
-                                <h3>Project Name</h3>
-                                <Chips value={this.state.projectname}
-                                    onChange={(e) => this.setState({ projectname: e.value })}
-                                    max={1}
-                                    tooltip="Press Enter to confirm"
-                                    placeholder= {(this.state.projectname.length===0) ?"Project name" : ""}></Chips>
+                                <NameComp name="Project Name"
+                                tip="Dashboard/Bot Name. Press ENTER to confirm the value"/>
+                                <Chips ref="input" value={this.state.projectname}
+                                    onChange={(e) => {this.setState({ projectname: e.value })
+                                    document.activeElement.blur()}}
+                                    max={1}></Chips>
 
-                                <h3>Roles</h3>
+                                
                                 {/* * Multiple input text for the roles */}
+                                <NameComp name="Roles Name"
+                                tip="List of role names for the project. Press ENTER for each value you want to insert"/>
                                 <Chips
                                     value={this.state.roles}
                                     onChange={(e) => this.setState({ roles: e.value })}></Chips>
 
                                 {/* * Button to add new user */}
-                                <h3>Users</h3>
-                                <Button label="Add Users" icon="pi pi-check"
+                                <NameComp name="Users"
+                                tip="List of initial user for the dashboard.
+                                      Press 'Add User' to add a new user"/>
+                                <Button label="Add User" icon="pi pi-plus"
                                     onClick={() => {
                                         const z = {
                                             name: [],
@@ -179,16 +185,35 @@ class App extends Component {
 
                                 {/* * List of user   */}
                                 {this.state.users.map((row, i) => {
-                                    return <div key={i}>
+                                    return <div key={i} style={{marginTop:"10px"}}>
                                         {/* * InputText for the user name */}
-                                        <Chips style={{ size: "150" }} value={row.name}
+                                        <NameComp name={"User"+i} dim={4}
+                                tip="User Info.
+                                      Press Enter in the text field to add the name 
+                                      and choose the role in the dropdown"/>
+                                        <Chips value={row.name}
                                             onChange={(e) => {
+                                                
                                                 const k = this.state.users
+                                                for(let n=0;n<k.length;n++) {
+                                                    if(n===i) continue;
+                                                    if(k[n].name[0]===e.value[0]) {
+                                                        this.growl.show({
+                                                            severity: 'error',
+                                                            summary: 'Error Message',
+                                                            detail: 'Name already used',
+                                                            sticky: true
+                                                        });
+                                                        document.activeElement.blur()
+                                                        return 
+                                                    }
+                                                }
                                                 k[i].name = e.value
                                                 this.setState({ users: k })
+                                                document.activeElement.blur()
                                             }}
                                             max={1}
-                                            tooltip="Press Enter to confirm"></Chips>
+                                            placeholder={(row.name.length===0)?"User name":""}></Chips>
                                             {/* * Dropdown for choose the role for the user */}
                                         <Dropdown value={row.role}
                                             options={role}
@@ -201,6 +226,8 @@ class App extends Component {
                                             {/* * Button to delete the user */}
                                         <Button
                                             icon="pi pi-times" className="p-button-danger"
+                                            style={{marginLeft:"15px"}}
+                                            tooltip="Delete User"
                                             onClick={() => {
                                                 const z = this.state.users
                                                 z.splice(i, 1)
@@ -215,7 +242,9 @@ class App extends Component {
                                     </div>
                                 })}
                                 {/* * DropDown for select the template*/}
-                                <h3>Template</h3>
+                                <NameComp name="Template"
+                                tip="Template used by the dashboard.
+                                    (Only Standard currently)"/>
                                 <Dropdown value={this.state.template}
                                     options={template}
                                     onChange={(e) => { this.setState({ template: e.value }) }}
@@ -225,16 +254,30 @@ class App extends Component {
                     </Accordion>
 
                     {/* * Button add new view */}
-                    <h2>Views</h2>
-                    <Button label="Add" icon="pi pi-plus"
+                    <NameComp name="Views" dim={2}
+                                tip="List of all view.
+                                      Press 'Add View' to add a new view"/>
+                    <Button label="Add View" icon="pi pi-plus"
                         onClick={() => this.setState(AddView(this.state))} />
                         {/* * List of accordion of all view */}
                     <Views names={this.state.name}
                         cancelButton={(i) => { this.setState(DeleteView(i, this.state)) }}
                         addData={(i) => { this.setState(AddData(i, this.state)) }}
-                        removeData={(s, i) => { this.setState(DeleteData(i, this.state)) }}
+                        removeData={(s, i) => { this.setState(DeleteData(s,i, this.state)) }}
                         onChange1={(e, i) => {
                             const nome = this.state.name
+                            for(let n=0;n<nome.length;n++) {
+                                if(n===i) continue
+                                if(nome[n][0]===e[0]){
+                                    this.growl.show({
+                                        severity: 'error',
+                                        summary: 'Error Message',
+                                        detail: 'Name already used in another view ',
+                                        sticky: true
+                                    });
+                                    return 
+                                }
+                            }
                             nome[i] = e
                             this.setState({
                                 name: nome
@@ -254,7 +297,20 @@ class App extends Component {
                         }}
                         onChangeData={(e, s, i) => {
                             const k = this.state.views
-                            k[i].data[s].title = e
+                            const title=k[i].data
+                            for(let n=0;n<title.length;n++) {
+                                if(n===s) continue
+                                if(title[n].title[0]===e[0]){
+                                    this.growl.show({
+                                        severity: 'error',
+                                        summary: 'Error Message',
+                                        detail: 'Name already used in another Data ',
+                                        sticky: true
+                                    });
+                                    return 
+                                }
+                            }
+                            title[s].title = e
                             this.setState({
                                 views: k
                             })

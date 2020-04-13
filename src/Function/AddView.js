@@ -11,7 +11,7 @@ export default function AddView(state) {
     const alarm = state.alarmval
 
     const nalarm = []
-    const inse = ['NewPage']
+    const inse = ['NewPage'+nome.length]
     const rol = []
     const agd = []
     const data = {

@@ -6,6 +6,7 @@ import { Button } from 'primereact/button';
 import { Chips } from 'primereact/chips'
 
 import Data from './Data.js'
+import NameComp from './NameComp.js'
 
 import 'primereact/resources/themes/nova-light/theme.css';
 import 'primereact/resources/primereact.min.css';
@@ -24,22 +25,26 @@ class AccTab extends Component {
                         {/* * Button to delete the view */}
                         <Button style={{ float: "right" }}
                             icon="pi pi-times" className="p-button-danger"
-                            onClick={() => this.props.cancelButton(i)} />
+                            onClick={() => this.props.cancelButton(i)} 
+                            tooltip="Delete View"/>
 
                             {/* * InputText for the viewName */}
-                        <h3>View Name</h3>
+                            <NameComp name="View Name" 
+                                tip="Press ENTER to confirm the value, must be different from the other view names"/>
                         <Chips value={row}
                             onChange={(e) => this.props.onChange1(e.target.value, i)}
                             max={1}></Chips>
                         {/* * MultiSelect for roles */}
-                        <h3>Select roles</h3>
+                        <NameComp name="View Role" 
+                                tip="Roles that can access this view; choose one or more roles "/>
                         <MultiSelect value={this.props.rolespage[i].admittedroles} options={this.props.role}
                             onChange={(e) => { this.props.onChangeMulti(e, i) }}
                             style={{ minWidth: '12em' }}
                             filter={true} filterPlaceholder="Search" placeholder="Choose Role" />
                            {/* * Button to add new data */}
-                        <h3>New Data</h3>
-                        <Button label="Add" icon="pi pi-plus"
+                           <NameComp name="Data" 
+                                tip="List of all data of this view; Press 'Add Data' to add a new data"/>
+                        <Button label="Add Data" icon="pi pi-plus"
                             onClick={() => this.props.addData(i)}></Button>
                          {/* * Component data */}
                         <Data datas={this.props.views[i].data}

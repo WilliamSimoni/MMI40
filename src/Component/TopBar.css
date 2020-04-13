@@ -1,12 +1,16 @@
 .topnav {
-    overflow: hidden;
+    position: fixed;
+    top:0;
+    display: flex;
+    height: 70px;
+    width: 100%;
     background-color: #333;
   }
 
   .topnav img {
     float: left;
-    width: 50px;
-    height: 50px;
+    width: 70px;
+    height: 70px;
     padding: 7px 7px;
     margin-left: 10px;
   }
@@ -25,10 +29,6 @@
     color: black;
   }
   
-  .topnav button.active {
-    background-color: #4CAF50;
-    color: white;
-  }
   
   .link-button {
     background-color: transparent;
@@ -53,7 +53,7 @@
     text-decoration: none;
     letter-spacing: 3px;
     font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-    margin-right: 100px;
+    margin-right: 50px;
     margin-left: 5px;
     
   }
