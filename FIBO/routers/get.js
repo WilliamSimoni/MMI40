@@ -215,9 +215,6 @@ router.post('/', [
         //true if granularity is sent as number
         const granularityIsNumeric = body.granularityIsNumeric;
 
-        //granularity used for store data in database
-        let granularityNumberForDB = 0;
-
         //point Number to Sent
         let pointNumber;
 
@@ -317,8 +314,10 @@ router.post('/', [
             return;
         }
 
-        //if store is true then devices and keyword must be sorted TODO
-
+        //if granularity is less then 5 second then it is set equal to 5
+        if (granularityInSecond < 5){
+            granularity.number = 5;
+        }
 
         //array where to save the query result 
         let result = [];
@@ -328,15 +327,14 @@ router.post('/', [
         let queryResult = [];
 
         timeSeriesStartAfterOnePeriod = time.add(timeSeriesStart, granularity.number, granularity.key) - 1;
-        //console.log(timeSeriesStart, timeSeriesStartAfterOnePeriod, granularity);
         //query database
         try {
             /*if (store === true) {
+                //if store is true then devices and keyword must be sorted
+                devices = sorting.algorithm(devices);
+                keywords = sorting.algorithm(keywords);
 
-                granularityNumberForDB = granularity.number;
-
-
-                queryResult = await database.queryDeviceData(project, devices, keywords, aggrFun.name, aggrFun.code.toString(), timePeriod.key, timePeriod.number.toString(), granularity.key, granularityNumberForDB.toString(), start * 1000000000, end * 1000000000);
+                queryResult = await database.queryDeviceData(project, devices, keywords, aggrFun.name, aggrFun.code.toString(), timePeriod.key, timePeriod.number.toString(), granularity.key, granularity.number.toString(), start * 1000000000, end * 1000000000);
 
                 if (queryResult.error) {
                     throw new Error(queryResult.error);
@@ -345,6 +343,7 @@ router.post('/', [
                 if (queryResult.timeSeriesStartAfterOnePeriod !== 0) {
                     timeSeriesStart = queryResult.timeSeriesStart;
                     timeSeriesStartAfterOnePeriod = queryResult.timeSeriesStartAfterOnePeriod;
+                    console.log(timeSeriesStart, timeSeriesStartAfterOnePeriod, granularity);
                 }
 
                 for (item of queryResult.query) {
@@ -401,14 +400,14 @@ router.post('/', [
                 keyword.periods = createTimeSeries(periodsList[keyword.time], 50);
             }
         }
-        
+
         /*********************************************************************************** */
 
         //send data to Calculator
         result = await calculator.aggrFun(aggrFun.name, aggrFun.code, lastTime)
 
-
-        /*if (store === true) {
+/*
+        if (store === true) {
 
             //add calculate data to data obtained from database
             for (let i = 0; i < queryResult.query.length; i++) {
@@ -418,10 +417,11 @@ router.post('/', [
             }
 
             //save new data in database
-            database.writeDeviceData(project, result, aggrFun.name, aggrFun.code.toString(), timePeriod.key, timePeriod.number.toString(), granularity.key, granularityNumberForDB.toString())
+            database.writeDeviceData(project, result, aggrFun.name, aggrFun.code.toString(), timePeriod.key, timePeriod.number.toString(), granularity.key, granularity.number.toString())
                 .catch(err => console.error(err));
             result = queryResult.query;
         }*/
+        
         response.status(200).json({ status: 200, result, pointNumber, timeSeriesStart });
 
     } catch (err) {

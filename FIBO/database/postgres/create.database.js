@@ -32,15 +32,13 @@ async function createDatabase(pool) {
         console.log(dbTablesName);
 
         //CREATE PROJECT IF IT DOES NOT EXIST
-        //workspace TODO
 
         if (dbTablesName.indexOf('project') === -1) {
             const res = await client.query(
                 `CREATE TABLE project
                 (
                     name text NOT NULL,
-                    username text NOT NULL,
-                    password text NOT NULL,
+                    token text NOT NULL,
                     workspaceuid text NOT NULL,
                     PRIMARY KEY (name)
                 )
@@ -105,6 +103,8 @@ async function createDatabase(pool) {
                 `CREATE TABLE data
                 (
                     id uuid NOT NULL,
+                    aggregationfunctionname text NOT NULL,
+                    aggregationfunctioncode int NOT NULL,
                     projectname text NOT NULL,
                     PRIMARY KEY (id),
                     FOREIGN KEY (projectname)

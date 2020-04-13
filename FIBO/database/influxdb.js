@@ -26,7 +26,7 @@ class InfluxDB {
             this.sixteenWeek = new Influx('http://127.0.0.1:8086/sixteenWeek');
             this.fiftyTwoWeek = new Influx('http://127.0.0.1:8086/fiftyTwoWeek');
             this.oneHundredFour = new Influx('http://127.0.0.1:8086/oneHundredFour');
-            this.long = new Influx('http://127.0.0.1:8086/long');
+            this.long = new Influx('http://127.0.0.1:8086/oneHundredFiftySix');
 
             this.twentyFourHours.showDatabases()
                 .then(result => {
@@ -103,10 +103,10 @@ class InfluxDB {
                             })
                     }
 
-                    if (!result.includes('long')) {
+                    if (!result.includes('oneHundredFiftySix')) {
                         this.long.createDatabase()
                             .then(value => {
-                                this.long.createRetentionPolicy('long', '156w', 1, null, true);
+                                this.long.createRetentionPolicy('oneHundredFiftySix', '156w', 1, null, true);
                             })
                             .catch(error => {
                                 console.error(error)
@@ -270,7 +270,7 @@ class InfluxDB {
             }
 
             if (result.timeSeriesStartAfterOnePeriod !== 0){
-                result.timeSeriesStart = time.subtract(result.timeSeriesStartAfterOnePeriod,granularityNumber, granularityKey);
+                result.timeSeriesStart = time.subtract(result.timeSeriesStartAfterOnePeriod,granularityNumber, granularityKey) + 1;
             }
 
             return result;

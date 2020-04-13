@@ -64,13 +64,14 @@ router.post('/', [
                 }
                 if (res) {
                     //create token
-                    const token = jwt.sign({ username: username, projectname: usernameSearchResult.rows[0].projectname, roleid: usernameSearchResult.rows[0].roleid },
+                    const token = jwt.sign({ username: username, projectname: projectName, roleid: usernameSearchResult.rows[0].roleid },
                         JWT_KEY,
                         { expiresIn: EXPRIRATION_TIME }
                     );
                     //send success
                     return response.status(200).json({
                         status: 200,
+                        role: usernameSearchResult.rows[0].rolename,
                         message: 'Authentication successful!',
                         token: token
                     });

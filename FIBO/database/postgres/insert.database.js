@@ -1,53 +1,15 @@
 const { Pool, Client } = require('pg');
-const { query } = require('./postgres/search.database');
-const { time } = require('../FIBO_modules/time');
+const { time } = require('../../FIBO_modules/time');
 const uuid = require('uuid');
-const { createDatabase } = require('./postgres/create.database');
+const bcrypt = require('bcrypt');
+const { PostgreCore } = require('./core.database');
+const { query } = require('./search.database');
 
-const EXPRIRATION_TIME = process.env.EXPRIRATION_TIME;
-const BCRYPT_SALT = process.env.BCRYPT_SALT;
+class PostgresDBInsert extends PostgreCore {
 
-class PostgresDB {
     constructor() {
-        if (!PostgresDB.instance) {
-            //Create Pool for connetion to Postgre
-            this.pool = new Pool({
-                user: process.env.PGUSER,
-                host: process.env.PGHOST,
-                database: process.env.PGDATABASE,
-                password: process.env.PGPASSWORD,
-                port: process.env.PGPORT,
-                ssl: false
-            });
-            PostgresDB.instance = this;
-        }
-
-        return PostgresDB.instance;
+        super();
     }
-
-    //SEARCH USER
-    async searchUser(username, projectName) {
-        return query(
-            this.pool,
-            `SELECT users.username, users.password, users.roleid, roles.name AS rolename
-                FROM users, roles
-                WHERE users.roleid = roles.id 
-                    AND	  users.username = $1
-                    AND   users.projectname = $2;`,
-            [username, projectName]
-        );
-    }
-
-    //SEARCH TOKEM IN BLACKLIST
-    async searchTokenInBlackList(token) {
-        return query(
-            this.pool,
-            `SELECT id FROM tokensblacklist WHERE token = $1`,
-            [token]
-        )
-    }
-
-    //INSERT METHODS
 
     //INSERT PROJECT
     async insertProject(projectName, token, workspace) {
@@ -287,16 +249,6 @@ class PostgresDB {
         return res;
     }
 
-    //PUT TOKEN IN BLACKLIST
-    async putTokenInBlackList(token, projectName) {
-        const id = uuid.v4();
-        return query(
-            this.pool,
-            `INSERT INTO tokensblacklist (id, token, expirationdate, projectname)
-                 VALUES($1,$2,$3,$4);`,
-            [id, token, time.add(time.now(), 24, 'hour'), projectName]
-        )
-    }
 }
 
-exports.PostgresDB = PostgresDB;
+exports.PostgresDBInsert = PostgresDBInsert;

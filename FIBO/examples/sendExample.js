@@ -21,7 +21,7 @@ async function send(request) {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IldpbGxpYW0iLCJwcm9qZWN0bmFtZSI6ImZlcnJhcmkiLCJyb2xlaWQiOiJhMzQxNmIyZS04MTFiLTQyYTYtYWZlZi0yYzdlODFhMWI3YWYiLCJpYXQiOjE1ODY1MzMxNTEsImV4cCI6MTU4NjYxOTU1MX0.P9E3TcSWNEf7ieYcek2yBUo-VexEr-kZGEUn1lCNaZU'
+            'Authorization':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IldpbGxpYW0iLCJwcm9qZWN0bmFtZSI6InBpZXJ1Y2NpIiwicm9sZWlkIjoiZDhkODdiYmEtOTk2NS00NjY4LTk3Y2QtYzU3Nzg2NTU2YTk2IiwiaWF0IjoxNTg2Nzg4OTIyLCJleHAiOjE1ODY4NzUzMjJ9.HWz3wrMZmNB7sqpm1vvUPA4nZ5x9GxPQ6-DHNELJIrA'
         },
         body: JSON.stringify(request),
     };
@@ -41,8 +41,8 @@ const request = {
     device: ['AE252', 'Second'],
     keyword: ['portata', 'temperature', "something else", "another thing", "and yet another one"],
     aggregationFunction: { name: 'sum', code: 4 },
-    timePeriod: {key: 'minute', number: 2},
-    granularity: {key: 'minute', number: 0.5},
+    timePeriod: {key: 'year', number: 2},
+    granularity: 11,
     unit:'s',
     store: true
 }
@@ -52,7 +52,7 @@ const request = {
 const loginRequest = {
     username:'William',
     password:'12345678',
-    projectName: 'ferrari'
+    projectName: 'pierucci'
 }
 
-send(request).then((json) => {console.log(json)}).catch(err => console.log(err));
+send(request).then((json) => {console.log(json.result[0].timeSeries)}).catch(err => console.log(err));
