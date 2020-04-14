@@ -1,3 +1,5 @@
+const { SanitizerError } = require(`../Error_Class/SanitizerError`);
+
 function errorJSONParser(err, request, response, next) {
     if (err instanceof SyntaxError && err.status === 400) {
         response.status(400).json({ status: 400, errors: ['body must be in json'] });
