@@ -53,6 +53,8 @@ class App extends Component {
             visible: false,
             displayBasic: false
         }
+
+        this.growl = null
     }
 
     /**

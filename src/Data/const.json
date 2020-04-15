@@ -26,7 +26,8 @@
         { "label": "Line", "value": "line" },
         { "label": "Map", "value": "map" },
         { "label": "Pie", "value": "pie" },
-        { "label": "Stacked", "value": "stacked" },
+        { "label": "Stacked Bar", "value": "stacked bar" },
+        { "label": "Stacked Column", "value": "stacked column" },
         { "label": "Scatter", "value": "scatter" }
     ],
     "aggregationType" :[

@@ -33,6 +33,8 @@ class ChartProps extends Component {
 
             case "bar": 
             case "column" :
+            case "stacked bar":
+            case "stacked column":
             case "donut" :
             case "pie" :return <div>
                 <NameComp name="Legend Position" dim={4}

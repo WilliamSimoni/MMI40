@@ -54,7 +54,12 @@
         "legendPosition": "bottom"
     },
     {
-        "type": "stacked"
+        "type": "stacked bar",
+        "legendPosition": "bottom"
+    },
+    {
+        "type": "stacked column",
+        "legendPosition": "bottom"
     },
     {
         "type": "scatter",
