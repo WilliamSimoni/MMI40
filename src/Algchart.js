@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 
-import 'primereact/resources/themes/nova-light/theme.css';
-import 'primereact/resources/primereact.min.css';
+/*import 'primereact/resources/themes/nova-light/theme.css';
+import 'primereact/resources/primereact.min.css';*/
 import 'primeicons/primeicons.css';
 import { Dropdown } from 'primereact/dropdown';
 
@@ -43,10 +43,10 @@ class AlgChart extends Component {
                     {this.question(this.state.q1)}
                 </div>
             case "q2":
-                return <div>Dato che volete evidenziare il singolo valore assunto da una variabile
+                return <div><p>Dato che volete evidenziare il singolo valore assunto da una variabile
                 i due grafici che puoi utilizzare sono:
                 • Icon Chart
-                  • Gauge Chart</div>
+                  • Gauge Chart</p></div>
 
             case "q3":
                 return <div><h3>Come intendi confrontare i valori delle variabili?</h3>
@@ -76,8 +76,8 @@ class AlgChart extends Component {
                 </div>
 
             case "q6":
-                return <div>Vuoi mostrare differenze o affinità tra i valori di varie variabili indipendenti in
-                vari momenti o periodi. Questo significa che il grafico più adatto è un Line Chart.</div>
+                return <div><p>Vuoi mostrare differenze o affinità tra i valori di varie variabili indipendenti in
+                vari momenti o periodi. Questo significa che il grafico più adatto è un Line Chart.</p></div>
             case "q7":
                 return <div><h3>Quante sono le variabili?</h3>
                     <Dropdown style={styleD} value={this.state.q7}
@@ -87,13 +87,13 @@ class AlgChart extends Component {
                     {this.question(this.state.q7)}
                 </div>
             case "q8":
-                return <div>Vuoi mostrare differenze o affinità tra i valori di una o due variabili
+                return <div><p>Vuoi mostrare differenze o affinità tra i valori di una o due variabili
                 indipendenti in un determinato momento o periodo. Questo significa che il
-                grafico più adatto è un Column Chart.</div>
+                grafico più adatto è un Column Chart.</p></div>
             case "q9":
-                return <div>Vuoi mostrare differenze o affinità tra i valori di varie variabili indipendenti un
+                return <div><p>Vuoi mostrare differenze o affinità tra i valori di varie variabili indipendenti un
                 determinato momento o periodo. Questo significa che il grafico più adatto è un
-                Bar Chart.</div>
+                Bar Chart.</p></div>
             case "q10":
                 return <div><h3>Come vuoi che sia la composizione?</h3>
                     <Dropdown style={styleD} value={this.state.q10}
@@ -103,13 +103,13 @@ class AlgChart extends Component {
                     {this.question(this.state.q10)}
                 </div>
             case "q11":
-                return <div>Vuoi mostrare differenze o affinità tra i valori di varie variabili indipendenti in
+                return <div><p>Vuoi mostrare differenze o affinità tra i valori di varie variabili indipendenti in
                 pochi momenti o periodi. Questo significa che il grafico più adatto è un
-                Column Chart.</div>
+                Column Chart.</p></div>
                 case "q12":
-                    return <div>Vuoi mostrare differenze o affinità tra i valori di varie variabili indipendenti in
+                    return <div><p>Vuoi mostrare differenze o affinità tra i valori di varie variabili indipendenti in
                     molti momenti o periodi. Questo significa che il grafico più adatto è un
-                    Line Chart.</div>
+                    Line Chart.</p></div>
                 case "q13":
                     return <div><h3>Quante sono le composizioni che vuoi mostrare?</h3>
                         <Dropdown style={styleD} value={this.state.q13}
@@ -119,12 +119,12 @@ class AlgChart extends Component {
                         {this.question(this.state.q13)}
                     </div>
             case "q14":
-                return <div>Vuoi mostrare un unica composizioni di variabili in un determinato momento.
-                Il grafico più adatto è un Pie Chart.</div>
+                return <div><p>Vuoi mostrare un unica composizioni di variabili in un determinato momento.
+                Il grafico più adatto è un Pie Chart.</p></div>
             case "q15":
-                return <div>Vuoi mostrare più composizioni di variabili in un determinato momento. Il
+                return <div><p>Vuoi mostrare più composizioni di variabili in un determinato momento. Il
                 grafico più adatto è uno 100% Stacked Bar Chart o uno 100% Stacked Column
-                Chart.</div>
+                Chart.</p></div>
             case "q16":
                 return <div><h3>Quanti sono i periodi/momenti?</h3>
                     <Dropdown style={styleD} value={this.state.q16}
@@ -142,14 +142,14 @@ class AlgChart extends Component {
                     {this.question(this.state.q17)}
                 </div>
             case "q18":
-                return <div>Vuoi mostrare la composizione di variabili in pochi momenti evidenziando
+                return <div><p>Vuoi mostrare la composizione di variabili in pochi momenti evidenziando
                 come ogni parte della composizione contribuisce sull'intera composizione. Il
-                grafico migliore è un 100% Stacked Column Chart o 100% Stacked Area Chart.</div>
+                grafico migliore è un 100% Stacked Column Chart o 100% Stacked Area Chart.</p></div>
             case "q19":
-                return <div>Vuoi mostrare la composizione di variabili in pochi momenti non solo
+                return <div><p>Vuoi mostrare la composizione di variabili in pochi momenti non solo
                 mostrando come le parti contribuiscono alla composizione, ma anche come
                 l'intera composizione varia nel tempo. Il grafico migliore è uno Stacked
-                Column Chart o Stacked Area Chart.</div>
+                Column Chart o Stacked Area Chart.</p></div>
              case "q20":
                 return <div><h3>Cosa vuoi mostrare nello specico?</h3>
                     <Dropdown style={styleD} value={this.state.q20}
@@ -159,13 +159,13 @@ class AlgChart extends Component {
                     {this.question(this.state.q20)}
                 </div>
             case "q21":
-                return <div>Vuoi mostrare la composizione di variabili in molti momenti evidenziando
+                return <div><p>Vuoi mostrare la composizione di variabili in molti momenti evidenziando
                 come ogni parte della composizione contribuisca sull'intera composizione. Il
-                grafico migliore è un 100% Stacked Area Chart.</div>
+                grafico migliore è un 100% Stacked Area Chart.</p></div>
             case "q22":
-                return <div>Vuoi mostrare la composizione di variabili in molti momenti evidenziando
+                return <div><p>Vuoi mostrare la composizione di variabili in molti momenti evidenziando
                 come ogni parte della composizione contribuisca sull'intera composizione. Il
-                grafico migliore è uno Stacked Area Chart.</div>
+                grafico migliore è uno Stacked Area Chart.</p></div>
             case "q23":
                 return <div><h3>Quanti sono i periodi/momenti?</h3>
                     <Dropdown style={styleD} value={this.state.q23}
@@ -183,14 +183,14 @@ class AlgChart extends Component {
                     {this.question(this.state.q24)}
                 </div>
             case "q25":
-                return <div>Vuoi mostrare le relazioni che intercorrono fra i valori di due variabili. Il
-                grafico per queste evenienze è un Scatter Plot.</div>
+                return <div><p>Vuoi mostrare le relazioni che intercorrono fra i valori di due variabili. Il
+                grafico per queste evenienze è un Scatter Plot.</p></div>
             case "q26":
-                return <div>Vuoi mostrare le relazioni che intercorrono fra i valori di tre variabili. Il grafico
-                per queste evenienze è un Bubble Chart.</div>
+                return <div><p>Vuoi mostrare le relazioni che intercorrono fra i valori di tre variabili. Il grafico
+                per queste evenienze è un Bubble Chart.</p></div>
             case "q27":
-                return <div>Vuoi mostrare le relazioni che intercorrono fra i valori di tante variabili. Non
-                c'è un grafico consigliato.</div>
+                return <div><p>Vuoi mostrare le relazioni che intercorrono fra i valori di tante variabili. Non
+                c'è un grafico consigliato.</p></div>
             case "q28":
                 return <div><h3>Quante sono le variabili?</h3>
                     <Dropdown style={styleD} value={this.state.q28}
@@ -200,11 +200,11 @@ class AlgChart extends Component {
                     {this.question(this.state.q28)}
                 </div>
             case "q29":
-                return <div>Mostrare la distribuzione di una variabile? Nulla di più semplice con un
-                Histogram.</div>
+                return <div><p>Mostrare la distribuzione di una variabile? Nulla di più semplice con un
+                Histogram.</p></div>
             case "q30":
-                return <div>Vuoi mostrare la distribuzione di due variabili. Quindi dovresti usare uno
-                Scatter Plot.</div>
+                return <div><p>Vuoi mostrare la distribuzione di due variabili. Quindi dovresti usare uno
+                Scatter Plot.</p></div>
              case "q31":
                 return <div><h3>Quante sono le variabili?</h3>
                     <Dropdown style={styleD} value={this.state.q31}
@@ -214,14 +214,14 @@ class AlgChart extends Component {
                     {this.question(this.state.q31)}
                 </div>
             case "q32":
-                return <div>Vuoi confrontare i valori di poche variabili in pochi periodi di tempo. Per cui
-                ti consiglio un semplice Column Chart.</div>
+                return <div><p>Vuoi confrontare i valori di poche variabili in pochi periodi di tempo. Per cui
+                ti consiglio un semplice Column Chart.</p></div>
             case "q33":
-                return <div>Vuoi confrontare i valori di molte variabili in pochi periodi di tempo. Per cui
-                ti consiglio un Line Chart.</div>
+                return <div><p>Vuoi confrontare i valori di molte variabili in pochi periodi di tempo. Per cui
+                ti consiglio un Line Chart.</p></div>
             case "q34":
-                return <div>Vuoi confrontare i valori di alcune variabili in molti periodi di tempo. Per cui
-                ti consiglio un Line Chart.</div>
+                return <div><p>Vuoi confrontare i valori di alcune variabili in molti periodi di tempo. Per cui
+                ti consiglio un Line Chart.</p></div>
             default:
                 return ""
         }

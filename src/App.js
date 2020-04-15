@@ -20,16 +20,20 @@ import DeleteData from './Function/DeleteData.js'
 import AddData from './Function/AddData.js'
 import AggFun from './Function/SetAggregationFun.js'
 import AlgChart from './Algchart'
+import { Dialog } from 'primereact/dialog';
 
 import { Sidebar } from 'primereact/sidebar';
 
-import 'primereact/resources/themes/nova-light/theme.css';
+import 'primereact/resources/themes/rhea/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import { Button } from 'primereact/button';
 
 
-
+/**
+ * Main Component of the application
+ * contains all the variables for the structure of the yaml
+ */ 
 class App extends Component {
 
     constructor() {
@@ -46,8 +50,8 @@ class App extends Component {
             alarmval: [],//list of all alarm for each view
             nuser: 0,//number of user
             users: [],//list of user
-            visible: false
-
+            visible: false,
+            displayBasic: false
         }
     }
 
@@ -76,8 +80,8 @@ class App extends Component {
     * @param {Object} value - The yaml file
     */
     UploadFile(value) {
+        //if value isnt a Yaml file
         if (value === null) {
-
             this.growl.show({
                 severity: 'error',
                 summary: 'Error Message',
@@ -85,12 +89,22 @@ class App extends Component {
             });
 
         } else {
-            this.setState(UploadYAML(value))
-            this.growl.show({
-                severity: 'success',
-                summary: 'Success Message',
-                detail: 'File Loaded'
-            });
+            const state = UploadYAML(value)
+            if (state === null) {
+                this.growl.show({
+                    severity: 'error',
+                    summary: 'Error Message',
+                    detail: 'Incorrect YAML file'
+                });
+            } else {
+                this.setState(state)
+                this.growl.show({
+                    severity: 'success',
+                    summary: 'Success Message',
+                    detail: 'File Loaded'
+                });
+            }
+
         }
 
 
@@ -137,7 +151,7 @@ class App extends Component {
                     *and show up the chart algorithm   
                     */}
                 <TopBar downloadFile={this.downloadFile}
-                    handleState={(value) => this.UploadFile(value)}
+                    uploadFile={(value) => this.UploadFile(value)}
                     openSide={(e) => this.setState({ visible: e })} />
 
                 <div id="main" className="Accord">
@@ -148,23 +162,25 @@ class App extends Component {
                             <div className="container">
                                 {/* * Input text for the project name */}
                                 <NameComp name="Project Name"
-                                tip="Dashboard/Bot Name. Press ENTER to confirm the value"/>
+                                    tip="Dashboard/Bot Name. Press ENTER to confirm the value" />
                                 <Chips ref="input" value={this.state.projectname}
-                                    onChange={(e) => {this.setState({ projectname: e.value })
-                                    document.activeElement.blur()}}
+                                    onChange={(e) => {
+                                        this.setState({ projectname: e.value })
+                                        document.activeElement.blur()
+                                    }}
                                     max={1}></Chips>
 
-                                
+
                                 {/* * Multiple input text for the roles */}
                                 <NameComp name="Roles Name"
-                                tip="List of role names for the project. Press ENTER for each value you want to insert"/>
+                                    tip="List of role names for the project. Press ENTER for each value you want to insert" />
                                 <Chips
                                     value={this.state.roles}
                                     onChange={(e) => this.setState({ roles: e.value })}></Chips>
 
                                 {/* * Button to add new user */}
                                 <NameComp name="Users"
-                                tip="List of initial user for the dashboard.
+                                    tip="List of initial user for the dashboard.
                                       Press 'Add User' to add a new user"/>
                                 <Button label="Add User" icon="pi pi-plus"
                                     onClick={() => {
@@ -185,19 +201,19 @@ class App extends Component {
 
                                 {/* * List of user   */}
                                 {this.state.users.map((row, i) => {
-                                    return <div key={i} style={{marginTop:"10px"}}>
+                                    return <div key={i} style={{ marginTop: "10px" }}>
                                         {/* * InputText for the user name */}
-                                        <NameComp name={"User"+i} dim={4}
-                                tip="User Info.
+                                        <NameComp name={"User" + i} dim={4}
+                                            tip="User Info.
                                       Press Enter in the text field to add the name 
                                       and choose the role in the dropdown"/>
                                         <Chips value={row.name}
                                             onChange={(e) => {
-                                                
+
                                                 const k = this.state.users
-                                                for(let n=0;n<k.length;n++) {
-                                                    if(n===i) continue;
-                                                    if(k[n].name[0]===e.value[0]) {
+                                                for (let n = 0; n < k.length; n++) {
+                                                    if (n === i) continue;
+                                                    if (k[n].name[0] === e.value[0]) {
                                                         this.growl.show({
                                                             severity: 'error',
                                                             summary: 'Error Message',
@@ -205,7 +221,7 @@ class App extends Component {
                                                             sticky: true
                                                         });
                                                         document.activeElement.blur()
-                                                        return 
+                                                        return
                                                     }
                                                 }
                                                 k[i].name = e.value
@@ -213,8 +229,8 @@ class App extends Component {
                                                 document.activeElement.blur()
                                             }}
                                             max={1}
-                                            placeholder={(row.name.length===0)?"User name":""}></Chips>
-                                            {/* * Dropdown for choose the role for the user */}
+                                            placeholder={(row.name.length === 0) ? "User name" : ""}></Chips>
+                                        {/* * Dropdown for choose the role for the user */}
                                         <Dropdown value={row.role}
                                             options={role}
                                             onChange={(e) => {
@@ -223,59 +239,70 @@ class App extends Component {
                                                 this.setState({ users: k })
                                             }}
                                             placeholder="Select a role" />
-                                            {/* * Button to delete the user */}
+                                        {/* * Button to delete the user */}
                                         <Button
                                             icon="pi pi-times" className="p-button-danger"
-                                            style={{marginLeft:"15px"}}
+                                            style={{ marginLeft: "15px" }}
                                             tooltip="Delete User"
                                             onClick={() => {
+                                                this.setState({ displayBasic: true })
+                                     
+                                            }}
+                                        />
+                                        <Dialog header="Delete User"
+                                            visible={this.state.displayBasic}
+                                            onHide={() => { this.setState({ displayBasic: false }) }} >
+                                            <h3>Are you sure you want to delete user{i}?</h3>
+                                            <Button label="Yes"onClick={() => {
+
                                                 const z = this.state.users
                                                 z.splice(i, 1)
                                                 const users = this.state.nuser - 1
                                                 this.setState({
                                                     nuser: users,
-                                                    users: z
+                                                    users: z,
+                                                    displayBasic: false
                                                 })
-                                            }} />
-
-
+                                            }}/>
+                                            <Button style={{float: "right"}} label="No" onClick={() => { this.setState({ displayBasic: false }) }}/>
+                                        </Dialog>
                                     </div>
                                 })}
                                 {/* * DropDown for select the template*/}
                                 <NameComp name="Template"
-                                tip="Template used by the dashboard.
+                                    tip="Template used by the dashboard.
                                     (Only Standard currently)"/>
                                 <Dropdown value={this.state.template}
                                     options={template}
                                     onChange={(e) => { this.setState({ template: e.value }) }}
                                     placeholder="Select a Template" />
                             </div>
-                        </AccordionTab>                   
+                        </AccordionTab>
                     </Accordion>
 
                     {/* * Button add new view */}
                     <NameComp name="Views" dim={2}
-                                tip="List of all view.
+                        tip="List of all view.
                                       Press 'Add View' to add a new view"/>
                     <Button label="Add View" icon="pi pi-plus"
                         onClick={() => this.setState(AddView(this.state))} />
-                        {/* * List of accordion of all view */}
+                    {/* * List of accordion of all view */}
                     <Views names={this.state.name}
                         cancelButton={(i) => { this.setState(DeleteView(i, this.state)) }}
                         addData={(i) => { this.setState(AddData(i, this.state)) }}
-                        removeData={(s, i) => { this.setState(DeleteData(s,i, this.state)) }}
+                        removeData={(s, i) => { this.setState(DeleteData(s, i, this.state)) }}
                         onChange1={(e, i) => {
                             const nome = this.state.name
-                            for(let n=0;n<nome.length;n++) {
-                                if(n===i) continue
-                                if(nome[n][0]===e[0]){
+                            for (let n = 0; n < nome.length; n++) {
+                                if (n === i) continue
+                                if (nome[n][0] === e[0]) {
                                     this.growl.show({
                                         severity: 'error',
                                         summary: 'Error Message',
                                         detail: 'Name already used in another view ',
                                         sticky: true
                                     });
-                                    return 
+                                    return
                                 }
                             }
                             nome[i] = e
@@ -297,17 +324,17 @@ class App extends Component {
                         }}
                         onChangeData={(e, s, i) => {
                             const k = this.state.views
-                            const title=k[i].data
-                            for(let n=0;n<title.length;n++) {
-                                if(n===s) continue
-                                if(title[n].title[0]===e[0]){
+                            const title = k[i].data
+                            for (let n = 0; n < title.length; n++) {
+                                if (n === s) continue
+                                if (title[n].title[0] === e[0]) {
                                     this.growl.show({
                                         severity: 'error',
                                         summary: 'Error Message',
                                         detail: 'Name already used in another Data ',
                                         sticky: true
                                     });
-                                    return 
+                                    return
                                 }
                             }
                             title[s].title = e

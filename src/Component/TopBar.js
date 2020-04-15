@@ -1,9 +1,11 @@
 import React, { Component } from 'react';
 import YAML from 'js-yaml';
 import './TopBar.css';
-import logo from '../wh.jpg';
+import logo from '../wizard.png';
 
-
+/**
+ * Top Navigation bar
+ */
 class TopBar extends Component {
 
     /* *Constructor */
@@ -33,10 +35,10 @@ class TopBar extends Component {
 
         try {
             const obj = YAML.load(content)
-            this.props.handleState(obj);
+            this.props.uploadFile(obj);
         } catch(e) {
             console.log(e)
-            this.props.handleState(null)
+            this.props.uploadFile(null)
         }
         
     }

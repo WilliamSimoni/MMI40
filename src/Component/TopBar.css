@@ -1,10 +1,11 @@
+
 .topnav {
     position: fixed;
     top:0;
     display: flex;
     height: 70px;
     width: 100%;
-    background-color: #333;
+    background-color: #7B95A3;
   }
 
   .topnav img {

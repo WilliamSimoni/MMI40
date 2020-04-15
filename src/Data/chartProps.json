@@ -4,21 +4,15 @@
     },
     {
         "type": "bar",
-        "mainLabelX": "",
-        "mainLabelY": "",
         "legendPosition": "bottom"
     },
     {
         "type": "bubble",
-        "mainLabelX": "",
-        "maniLabelY": "",
         "legendPosition": "bottom",
         "trendLine": false
     },
     {
         "type": "column",
-        "mainLabelX": "",
-        "maniLabelY": "",
         "legendPosition": "bottom"
     },
     {
@@ -49,8 +43,6 @@
     },
     {
         "type": "line",
-        "mainLabelX": "",
-        "maniLabelY": "",
         "legendPosition": "bottom",
         "lineType": "point"
     },
@@ -66,8 +58,6 @@
     },
     {
         "type": "scatter",
-        "mainLabelX": "",
-        "maniLabelY": "",
         "legendPosition": "bottom",
         "trendLine": false
     }

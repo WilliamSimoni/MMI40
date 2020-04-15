@@ -33,7 +33,7 @@ export default function addData(i,state) {
                 divided: [],
             }
         },
-        timeinterval: '1 seconds',
+        timeinterval: '5 seconds',
         granularity: '1',
         chart: {
             type: ''

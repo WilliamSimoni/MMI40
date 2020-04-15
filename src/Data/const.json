@@ -44,6 +44,28 @@
         { "label": "Divided[device,keyword]", "value": "div" }
     ],
 
+    "valuePosition": [
+        { "label": "Top", "value": "top" },
+            { "label": "Bottom", "value": "bottom" },
+            { "label": "Right", "value": "right" },
+            { "label": "Left", "value": "left" }
+    ],
+    "legendPosition": [
+        
+            { "label": "Top", "value": "top" },
+            { "label": "Bottom", "value": "bottom" },
+            { "label": "Right", "value": "right" },
+            { "label": "Left", "value": "left" },
+            { "label": "None", "value": "" }
+
+        ],
+        "lineType" : [
+            { "label": "Point", "value": "point" },
+            { "label": "Basic", "value": "basic" },
+            { "label": "Brush", "value": "brush" }
+        ],
+    
+
     "datatype": [
          {"name": "wind direction","unitofmeasure": "°"},
          {"name": "temperature","unitofmeasure": "°C"},
@@ -60,31 +82,7 @@
          {"name": "range","unitofmeasure": "m"},
          {"name": "weight","unitofmeasure": "g"},
          {"name": "general","unitofmeasure": "u"}
-    ],
-
-    "dataformat": {
-        "title": "Newdata",
-        "type": "",
-        "alarm": "undefined",
-        "variables": {
-            "datasource": {
-                "device": [],
-                "keyword": []
-
-            },
-            "aggregationfunction": {
-                "type": "",
-                "aggregated": [],
-                "divided": []
-            }
-        },
-        "timeinterval": "1 seconds",
-        "granularity": "1",
-        "chart": {
-            "type": ""
-        }
-
-    }
+    ]
     
 
 }
