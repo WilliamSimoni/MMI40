@@ -9,8 +9,14 @@ Wizard 2.0
 
 -run "npm install" (may take some minute)
 
--run "npm start"
+if you wanna se the web page app
 
--open browser and go to http://localhost:3000/
+  -run "npm start"
 
+  -open browser and go to http://localhost:3000/
+
+else if you wanna see the desktop app
+
+  -run "npm run build"
+  -run "npm run electron"
 
