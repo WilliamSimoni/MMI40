@@ -5,6 +5,9 @@
  */
 export default function UploadFile(value) {
     try {
+        if (value.projectname === undefined || value.views === undefined
+            || value.users === undefined || value.roles === undefined) return null
+
         let alarm = []
         const views = value.views;
         let pages = []
@@ -14,7 +17,7 @@ export default function UploadFile(value) {
 
         //for all view
         for (let i = 0; i < views.length; i++) {
-
+            if (views[i].viewname === undefined || views[i].data === undefined) return null
             pages.push([views[i].viewname])
             addmi.push({ admittedroles: views[i].admittedroles })
             const k = views[i].data
@@ -24,6 +27,15 @@ export default function UploadFile(value) {
 
             //for all data in view i
             for (let h = 0; h < l; h++) {
+                if (k[h].title === undefined || k[h].type === undefined || k[h].variables === undefined
+                    || k[h].timeinterval === undefined || k[h].granularity === undefined || k[h].chart === undefined) return null
+                if (k[h].variables.datasource === undefined || k[h].variables.aggregationfunction === undefined
+                    || k[h].chart.type === undefined) return null
+                if (k[h].variables.datasource.device === undefined || k[h].variables.datasource.keyword === undefined ||
+                    k[h].variables.aggregationfunction.type === undefined ||
+                    k[h].variables.aggregationfunction.aggregated === undefined ||
+                    k[h].variables.aggregationfunction.divided === undefined) return null
+
                 //read alarm
                 if (k[h].alarm === undefined) alarm2.push(false)
                 else alarm2.push(true)

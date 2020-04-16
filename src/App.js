@@ -20,7 +20,6 @@ import DeleteData from './Function/DeleteData.js'
 import AddData from './Function/AddData.js'
 import AggFun from './Function/SetAggregationFun.js'
 import AlgChart from './Algchart'
-import { Dialog } from 'primereact/dialog';
 
 import { Sidebar } from 'primereact/sidebar';
 
@@ -33,7 +32,7 @@ import { Button } from 'primereact/button';
 /**
  * Main Component of the application
  * contains all the variables for the structure of the yaml
- */ 
+ */
 class App extends Component {
 
     constructor() {
@@ -51,7 +50,8 @@ class App extends Component {
             nuser: 0,//number of user
             users: [],//list of user
             visible: false,
-            displayBasic: false
+            href: null,
+
         }
 
         this.growl = null
@@ -60,21 +60,21 @@ class App extends Component {
     /**
      * Create the YAML file ready for download
      */
-    downloadFile = async () => {
+    downloadFile = () => {
         const YAML = require('json-to-pretty-yaml');
-
-        const yamlcomp = CreateYAML(this.state);
+        let newstate = this.state
+        const yamlcomp = CreateYAML(newstate);
         const yaml = YAML.stringify(yamlcomp);
         const blob = new Blob([yaml], { type: 'application/x-yaml' });
 
-        const href = await URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = href;
-        link.download = "file.yaml";
+        const href = URL.createObjectURL(blob);
 
-        document.body.appendChild(link);
+        const link = document.getElementById("download");
+        link.href = href
+        link.download = "file.yaml"
+        console.log(link)
         link.click();
-        document.body.removeChild(link);
+
     }
 
     /**
@@ -102,7 +102,7 @@ class App extends Component {
                 this.setState(state)
                 this.growl.show({
                     severity: 'success',
-                    summary: 'Success Message',
+                    summary: 'Success message',
                     detail: 'File Loaded'
                 });
             }
@@ -156,6 +156,9 @@ class App extends Component {
                     uploadFile={(value) => this.UploadFile(value)}
                     openSide={(e) => this.setState({ visible: e })} />
 
+                {/* Link element for download*/}
+                <a id="download" style={{ display: "none" }} 
+                href={this.state.href}>Download</a>
                 <div id="main" className="Accord">
                     <Growl ref={(el) => this.growl = el} />
                     {/* * Accordion for general data */}
@@ -187,7 +190,7 @@ class App extends Component {
                                 <Button label="Add User" icon="pi pi-plus"
                                     onClick={() => {
                                         const z = {
-                                            name: [],
+                                            name: "",
                                             pass: this.genPassword(),
                                             role: ""
                                         }
@@ -209,13 +212,13 @@ class App extends Component {
                                             tip="User Info.
                                       Press Enter in the text field to add the name 
                                       and choose the role in the dropdown"/>
-                                        <Chips value={row.name}
+                                        <Chips value={(row.name === "") ? [] : [row.name]}
                                             onChange={(e) => {
 
                                                 const k = this.state.users
                                                 for (let n = 0; n < k.length; n++) {
                                                     if (n === i) continue;
-                                                    if (k[n].name[0] === e.value[0]) {
+                                                    if (k[n].name === e.value[0]) {
                                                         this.growl.show({
                                                             severity: 'error',
                                                             summary: 'Error Message',
@@ -226,7 +229,7 @@ class App extends Component {
                                                         return
                                                     }
                                                 }
-                                                k[i].name = e.value
+                                                k[i].name = e.value[0]
                                                 this.setState({ users: k })
                                                 document.activeElement.blur()
                                             }}
@@ -247,27 +250,16 @@ class App extends Component {
                                             style={{ marginLeft: "15px" }}
                                             tooltip="Delete User"
                                             onClick={() => {
-                                                this.setState({ displayBasic: true })
-                                     
-                                            }}
-                                        />
-                                        <Dialog header="Delete User"
-                                            visible={this.state.displayBasic}
-                                            onHide={() => { this.setState({ displayBasic: false }) }} >
-                                            <h3>Are you sure you want to delete user{i}?</h3>
-                                            <Button label="Yes"onClick={() => {
-
                                                 const z = this.state.users
                                                 z.splice(i, 1)
                                                 const users = this.state.nuser - 1
                                                 this.setState({
                                                     nuser: users,
-                                                    users: z,
-                                                    displayBasic: false
+                                                    users: z
                                                 })
-                                            }}/>
-                                            <Button style={{float: "right"}} label="No" onClick={() => { this.setState({ displayBasic: false }) }}/>
-                                        </Dialog>
+
+                                            }}
+                                        />                                            
                                     </div>
                                 })}
                                 {/* * DropDown for select the template*/}
@@ -329,7 +321,7 @@ class App extends Component {
                             const title = k[i].data
                             for (let n = 0; n < title.length; n++) {
                                 if (n === s) continue
-                                if (title[n].title[0] === e[0]) {
+                                if (title[n].title === e) {
                                     this.growl.show({
                                         severity: 'error',
                                         summary: 'Error Message',

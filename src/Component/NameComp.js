@@ -25,7 +25,7 @@ dimension(n) {
                  icon="pi pi-question"
                  className="p-button-rounded p-button-secondary"
                  tooltip={this.props.tip}
-                 disabled="disabled"></Button>
+                 ></Button>
              </div>
          )
      }

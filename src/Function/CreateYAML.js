@@ -17,12 +17,16 @@ export default function CreateYAML(datainput) {
 
     }
 
-
+     const elim=[]
     for (let d = 0; d < datainput.nuser; d++) {
         const h = yamlcomp.users[d]
-        const s = h.name[0]
-        h.name = s
-
+        if(h.name==="") {
+            elim.push(d)            
+            continue
+        }
+    }
+    for(let d=0; d<elim.length;d++) {
+        yamlcomp.users.splice(elim[d],1)
     }
     let pages = []
 
