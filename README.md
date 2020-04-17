@@ -1,6 +1,6 @@
 Wizard 2.0
 
-Read Yaml.confgurator.pdf for the full documentation.
+Read Yaml-configurator.pdf for the full documentation.
 
 
 -Download last version of Node.js
