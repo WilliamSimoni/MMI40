@@ -1,5 +1,7 @@
 Wizard 2.0
 
+Read Yaml.confgurator.pdf for the full documentation.
+
 
 -Download last version of Node.js
 
@@ -18,5 +20,6 @@ if you wanna se the web page app
 else if you wanna see the desktop app
 
   -run "npm run build"
+  
   -run "npm run electron"
 
