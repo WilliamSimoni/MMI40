@@ -1,6 +1,8 @@
 const { Pool, Client } = require('pg');
 require('dotenv').config();
 
+console.log(process.env.PGPORT);
+
 const pool = new Pool({
     user: process.env.PGUSER,
     host: process.env.PGHOST,
@@ -19,16 +21,17 @@ async function dropDatabase(pool) {
                 project, 
                 data, 
                 tokensblacklist, 
-                devices, 
+                superusers, 
                 alarms, 
                 access, 
-                sent, 
                 roles, 
                 according, 
-                users 
+                users,
+                fleets,
+                relative,
+                taggroup
                 CASCADE;
         `);
-        console.log(res);
         res = await client.query(
             'DROP TYPE IF EXISTS alarmtype'
         );

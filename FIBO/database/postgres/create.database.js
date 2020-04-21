@@ -1,4 +1,14 @@
 const { Pool, Client } = require('pg');
+require('dotenv').config();
+
+const pool = new Pool({
+    user: process.env.PGUSER,
+    host: process.env.PGHOST,
+    database: process.env.PGDATABASE,
+    password: process.env.PGPASSWORD,
+    port: process.env.PGPORT,
+    ssl: false
+});
 
 async function createDatabase(pool) {
 
@@ -31,6 +41,22 @@ async function createDatabase(pool) {
 
         console.log(dbTablesName);
 
+        //CREATE SUPER USER
+        if (dbTablesName.indexOf('superusers') === -1) {
+            const res = await client.query(
+                `CREATE TABLE superusers
+                        (
+                            username text NOT NULL,
+                            password text NOT NULL,
+                            PRIMARY KEY (username)
+                        )
+                        WITH (
+                            OIDS = FALSE
+                        );
+                    `);
+            console.log(res);
+        }
+
         //CREATE PROJECT IF IT DOES NOT EXIST
 
         if (dbTablesName.indexOf('project') === -1) {
@@ -39,39 +65,52 @@ async function createDatabase(pool) {
                 (
                     name text NOT NULL,
                     token text NOT NULL,
+                    tokenexpires bigint NOT NULL,
                     workspaceuid text NOT NULL,
-                    PRIMARY KEY (name)
-                )
-                WITH (
-                    OIDS = FALSE
-                );
-            `);
-            console.log(res);
-        }
-
-        //CREATE DEVICES
-
-        if (dbTablesName.indexOf('devices') === -1) {
-            const res = await client.query(
-                `CREATE TABLE devices   
-                (
-                    id uuid NOT NULL,
-                    name text NOT NULL,
-                    projectname text NOT NULL,
-                    PRIMARY KEY (id),
-                    UNIQUE (name, projectname),
-                    FOREIGN KEY (projectname)
-                        REFERENCES project (name) MATCH SIMPLE
+                    zdmemail text NOT NULL,
+                    zdmpassword text NOT NULL,
+                    superuser text NOT NULL,
+                    PRIMARY KEY (name),
+                    FOREIGN KEY (superuser)
+                        REFERENCES superusers (username) MATCH SIMPLE
                         ON UPDATE NO ACTION
-                        ON DELETE NO ACTION
+                        ON DELETE CASCADE
                         NOT VALID
                 )
                 WITH (
                     OIDS = FALSE
                 );
+                
             `);
             console.log(res);
         }
+
+        //CREATE FLEETS
+        
+        if (dbTablesName.indexOf('fleets') === -1) {
+            const res = await client.query(
+                `CREATE TABLE fleets
+                (
+                    id uuid NOT NULL,
+                    name text,
+                    zdmfleetid text NOT NULL,
+                    projectname text NOT NULL,
+                    PRIMARY KEY (id),
+                    UNIQUE (zdmfleetid, projectname),
+                    FOREIGN KEY (projectname)
+                        REFERENCES project (name) MATCH SIMPLE
+                        ON UPDATE NO ACTION
+                        ON DELETE CASCADE
+                        NOT VALID
+                )
+                WITH (
+                    OIDS = FALSE
+                );
+                
+            `);
+            console.log(res);
+        }
+
 
         //CREATE TAGS
 
@@ -87,7 +126,7 @@ async function createDatabase(pool) {
                     FOREIGN KEY (projectname)
                         REFERENCES project (name) MATCH SIMPLE
                         ON UPDATE NO ACTION
-                        ON DELETE NO ACTION
+                        ON DELETE CASCADE
                         NOT VALID
                 )
                 WITH (
@@ -103,14 +142,13 @@ async function createDatabase(pool) {
                 `CREATE TABLE data
                 (
                     id uuid NOT NULL,
-                    aggregationfunctionname text NOT NULL,
-                    aggregationfunctioncode int NOT NULL,
+                    aggregationfunction text NOT NULL,
                     projectname text NOT NULL,
                     PRIMARY KEY (id),
                     FOREIGN KEY (projectname)
                         REFERENCES project (name) MATCH SIMPLE
                         ON UPDATE NO ACTION
-                        ON DELETE NO ACTION
+                        ON DELETE CASCADE
                         NOT VALID
                 )
                 WITH (
@@ -140,39 +178,17 @@ async function createDatabase(pool) {
                     threshold integer NOT NULL,
                     type alarmtype NOT NULL,
                     dataid uuid NOT NULL,
+                    active boolean NOT NULL,
                     PRIMARY KEY (id),
                     FOREIGN KEY (dataid)
                         REFERENCES data (id) MATCH SIMPLE
                         ON UPDATE NO ACTION
-                        ON DELETE NO ACTION
+                        ON DELETE CASCADE
                         NOT VALID
                 )
                 WITH (
                     OIDS = FALSE
                 );
-            `);
-            console.log(res);
-        }
-
-        //CREATE ROLES
-        if (dbTablesName.indexOf('roles') === -1) {
-            const res = await client.query(
-                `CREATE TABLE roles
-            (
-                id uuid NOT NULL,
-                name text NOT NULL,
-                projectname text NOT NULL,
-                PRIMARY KEY (id),
-                UNIQUE (name, projectname),
-                FOREIGN KEY (projectname)
-                    REFERENCES project (name) MATCH SIMPLE
-                    ON UPDATE NO ACTION
-                    ON DELETE NO ACTION
-                    NOT VALID
-            )
-            WITH (
-                OIDS = FALSE
-            );
             `);
             console.log(res);
         }
@@ -186,18 +202,12 @@ async function createDatabase(pool) {
                 username text NOT NULL,
                 password text NOT NULL,
                 projectname text NOT NULL,
-                roleid uuid NOT NULL,
                 PRIMARY KEY (id),
                 UNIQUE (username, projectname),
                 FOREIGN KEY (projectname)
                     REFERENCES project (name) MATCH SIMPLE
                     ON UPDATE NO ACTION
-                    ON DELETE NO ACTION
-                    NOT VALID,
-                FOREIGN KEY (roleid)
-                    REFERENCES roles (id) MATCH SIMPLE
-                    ON UPDATE NO ACTION
-                    ON DELETE NO ACTION
+                    ON DELETE CASCADE
                     NOT VALID
             )
             WITH (
@@ -213,18 +223,18 @@ async function createDatabase(pool) {
             const res = await client.query(
                 `CREATE TABLE access
             (
-                roleid uuid NOT NULL,
-                dataid uuid NOT NULL,
-                PRIMARY KEY (roleid, dataid),
-                FOREIGN KEY (roleid)
-                    REFERENCES roles (id) MATCH SIMPLE
+                userid uuid NOT NULL,
+                fleetid uuid NOT NULL,
+                PRIMARY KEY (userid, fleetid),
+                FOREIGN KEY (userid)
+                    REFERENCES users (id) MATCH SIMPLE
                     ON UPDATE NO ACTION
-                    ON DELETE NO ACTION
+                    ON DELETE CASCADE
                     NOT VALID,
-                FOREIGN KEY (dataid)
-                    REFERENCES data (id) MATCH SIMPLE
+                FOREIGN KEY (fleetid)
+                    REFERENCES fleets (id) MATCH SIMPLE
                     ON UPDATE NO ACTION
-                    ON DELETE NO ACTION
+                    ON DELETE CASCADE
                     NOT VALID
             )
             WITH (
@@ -234,23 +244,23 @@ async function createDatabase(pool) {
             console.log(res);
         }
 
-        //CREATE SENT
-        if (dbTablesName.indexOf('sent') === -1) {
+        //CREATE RELATIVE
+        if (dbTablesName.indexOf('relative') === -1) {
             const res = await client.query(
-                `CREATE TABLE sent
+                `CREATE TABLE relative
                 (
-                    deviceid uuid NOT NULL,
                     dataid uuid NOT NULL,
-                    PRIMARY KEY (deviceid, dataid),
-                    FOREIGN KEY (deviceid)
-                        REFERENCES devices (id) MATCH SIMPLE
-                        ON UPDATE NO ACTION
-                        ON DELETE NO ACTION
-                        NOT VALID,
+                    fleetid uuid NOT NULL,
+                    PRIMARY KEY (dataid, fleetid),
                     FOREIGN KEY (dataid)
                         REFERENCES data (id) MATCH SIMPLE
                         ON UPDATE NO ACTION
-                        ON DELETE NO ACTION
+                        ON DELETE CASCADE
+                        NOT VALID,
+                    FOREIGN KEY (fleetid)
+                        REFERENCES fleets (id) MATCH SIMPLE
+                        ON UPDATE NO ACTION
+                        ON DELETE CASCADE
                         NOT VALID
                 )
                 WITH (
@@ -260,23 +270,18 @@ async function createDatabase(pool) {
             console.log(res);
         }
 
-        //CREATE ACCORDING
-        if (dbTablesName.indexOf('according') === -1) {
+        //CREATE TAGGROUP
+        if (dbTablesName.indexOf('taggroup') === -1) {
             const res = await client.query(
-                `CREATE TABLE according
+                `CREATE TABLE taggroup
                 (
-                    tagid uuid NOT NULL,
+                    id uuid NOT NULL,
                     dataid uuid NOT NULL,
-                    PRIMARY KEY (tagid, dataid),
-                    FOREIGN KEY (tagid)
-                        REFERENCES tags (id) MATCH SIMPLE
-                        ON UPDATE NO ACTION
-                        ON DELETE NO ACTION
-                        NOT VALID,
+                    PRIMARY KEY (id),
                     FOREIGN KEY (dataid)
                         REFERENCES data (id) MATCH SIMPLE
                         ON UPDATE NO ACTION
-                        ON DELETE NO ACTION
+                        ON DELETE CASCADE
                         NOT VALID
                 )
                 WITH (
@@ -286,6 +291,33 @@ async function createDatabase(pool) {
             console.log(res);
         }
 
+        //CREATE ACCORDING
+        if (dbTablesName.indexOf('according') === -1) {
+            const res = await client.query(
+                `CREATE TABLE according
+                (
+                    tagid uuid NOT NULL,
+                    groupid uuid NOT NULL,
+                    PRIMARY KEY (tagid, groupid),
+                    FOREIGN KEY (tagid)
+                        REFERENCES tags (id) MATCH SIMPLE
+                        ON UPDATE NO ACTION
+                        ON DELETE CASCADE
+                        NOT VALID,
+                    FOREIGN KEY (groupid)
+                        REFERENCES taggroup (id) MATCH SIMPLE
+                        ON UPDATE NO ACTION
+                        ON DELETE CASCADE
+                        NOT VALID
+                )
+                WITH (
+                    OIDS = FALSE
+                );
+        `);
+            console.log(res);
+        }
+        
+
         //CREATE BLACKLIST
         if (dbTablesName.indexOf('tokensblacklist') === -1) {
             const res = await client.query(
@@ -294,13 +326,7 @@ async function createDatabase(pool) {
                     id uuid NOT NULL,
                     token text NOT NULL,
                     expirationdate bigint NOT NULL,
-                    projectname text NOT NULL,
-                    PRIMARY KEY (id),
-                    FOREIGN KEY (projectname)
-                        REFERENCES project (name) MATCH SIMPLE
-                        ON UPDATE NO ACTION
-                        ON DELETE NO ACTION
-                        NOT VALID
+                    PRIMARY KEY (id)
                 )
                 WITH (
                     OIDS = FALSE
@@ -316,3 +342,7 @@ async function createDatabase(pool) {
 
 //EXEC
 exports.createDatabase = createDatabase;
+
+//EXEC
+createDatabase(pool)
+    .catch(error => console.error(error));

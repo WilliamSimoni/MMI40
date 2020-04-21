@@ -1,6 +1,6 @@
 const fetch = require('node-fetch');
 
-const API_URL = `http://localhost:7778/aggrFun`;
+const API_URL = `http://localhost:7778/aggregate`;
 
 const legalFunctions = [
     'sum',
@@ -9,21 +9,15 @@ const legalFunctions = [
     'min'
 ]
 
-/** 
-    * @param {number} code - code that tells the calculator how to perform the function
-*/
-function legalCodes(code){
-    if (code < 1 || code > 4){
-        return false;
-    }
-    return true;
-}   
-
-async function aggrFun(aggrName, aggrCode, timeSeries){
+async function aggrFun(aggrName, projectName, tags, values, fleets, periods, granularities){
     const request = {
-        aggrFunName: aggrName,
-        aggrFunCode: aggrCode,
-        timeSeries: timeSeries,
+        aggrFun: aggrName,
+        projectName: projectName,
+        tags: tags,
+        values: values,
+        fleets: fleets,
+        periods: periods,
+        granularities: granularities
     };
 
     const options = {
@@ -36,12 +30,11 @@ async function aggrFun(aggrName, aggrCode, timeSeries){
     const response = await fetch(API_URL, options);
     const json = await response.json();
 
-    const {result} = json;
+    const result = json;
 
     return result;
 }
 
 
 exports.legalFunctions = legalFunctions;
-exports.legalCodes = legalCodes;
 exports.aggrFun = aggrFun;

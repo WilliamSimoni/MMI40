@@ -7,7 +7,9 @@ const { Database } = require('../database/db');
 //for generating JWT
 const jwt = require('jsonwebtoken');
 const JWT_KEY = process.env.JWT_KEY;
-const EXPRIRATION_TIME = process.env.EXPRIRATION_TIME;
+const JWT_KEY_SUPERUSER = process.env.JWT_KEY_SUPERUSER;
+
+const EXPIRATION_TIME = process.env.EXPIRATION_TIME;
 
 if (!JWT_KEY) {
     throw new Error('JWT_KEY NON DEFINED');
@@ -33,7 +35,8 @@ router.post('/', [
         .isString().withMessage('username or password or project not valid'),
     body('projectName')
         .exists().withMessage('username or password or project not valid').bail()
-        .isString().withMessage('username or password or project not valid'),
+        .isString().withMessage('username or password or project not valid')
+        .customSanitizer(projectName => projectName.replace(/\w+/g, (match) => match.toLowerCase())),
 ],
     async (request, response) => {
         try {
@@ -52,26 +55,34 @@ router.post('/', [
 
 
             //username doesn't exist
-            if (!usernameSearchResult.rows[0]) {
+            if (!usernameSearchResult[0]) {
                 return response.status(411).json({ status: 411, errors: ['username or password or project not valid'] });
             }
 
             //check password
-            bcrypt.compare(password, usernameSearchResult.rows[0].password, function (err, res) {
+            bcrypt.compare(password, usernameSearchResult[0].password, function (err, res) {
                 if (err) {
                     console.error(error);
                     return response.status(400).json({ status: 400, errors: ['Something went wrong'] });
                 }
                 if (res) {
+
+                    let fleetIds = [];
+                    let fleetsZdmIds = [];
+                    for (let item of usernameSearchResult){
+                        fleetIds.push(item.fleetid);
+                        fleetsZdmIds.push(item.zdmfleetid);
+                    }
+
                     //create token
-                    const token = jwt.sign({ username: username, projectname: projectName, roleid: usernameSearchResult.rows[0].roleid },
+                    const token = jwt.sign({ username: username, projectname: projectName, fleetsZdmIds, fleetIds },
                         JWT_KEY,
-                        { expiresIn: EXPRIRATION_TIME }
+                        { expiresIn: EXPIRATION_TIME }
                     );
                     //send success
                     return response.status(200).json({
                         status: 200,
-                        role: usernameSearchResult.rows[0].rolename,
+                        fleetsZdmIds,
                         message: 'Authentication successful!',
                         token: token
                     });
@@ -84,6 +95,61 @@ router.post('/', [
             response.status(400).json({ status: 400, errors: ['Something went wrong'] });
         }
     });
+
+    router.post('/superuser', [
+        body('username')
+            .exists().withMessage('username or password or project not valid').bail()
+            .isString().withMessage('username or password or project not valid'),
+        body('password')
+            .exists().withMessage('username or password or project not valid').bail()
+            .isString().withMessage('username or password or project not valid')
+    ],
+        async (request, response) => {
+            try {
+                //handle validation error
+                const errors = validationResult(request);
+                if (!errors.isEmpty()) {
+                    return response.status(411).json({ status: 411, errors: ['username or password not valid'] });
+                }
+    
+                let username = request.body.username;
+                let password = request.body.password;
+    
+                //search user in database
+                const usernameSearchResult = await database.searchSuperUser(username);
+    
+                //username doesn't exist
+                if (!usernameSearchResult[0]) {
+                    return response.status(411).json({ status: 411, errors: ['username or password not valid'] });
+                }
+    
+                //check password
+                bcrypt.compare(password, usernameSearchResult[0].password, function (err, res) {
+                    if (err) {
+                        console.error(error);
+                        return response.status(400).json({ status: 400, errors: ['Something went wrong'] });
+                    }
+                    if (res) {
+                        //create token
+                        const token = jwt.sign({username: username},
+                            JWT_KEY_SUPERUSER,
+                            { expiresIn: EXPIRATION_TIME }
+                        );
+                        //send success
+                        return response.status(200).json({
+                            status: 200,
+                            message: 'Authentication successful!',
+                            token: token
+                        });
+                    } else {
+                        return response.status(411).json({ status: 411, errors: ['username or password not valid'] });
+                    }
+                });
+            } catch (err) {
+                console.error(err);
+                response.status(400).json({ status: 400, errors: ['Something went wrong'] });
+            }
+        });
 
 
 exports.login = router;
