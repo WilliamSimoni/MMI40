@@ -1,0 +1,28 @@
+{
+  "name": "fibo_calculator",
+  "version": "0.0.5",
+  "description": "calculator that receive and aggregate iot data",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "calculator",
+    "iot",
+    "fibo"
+  ],
+  "author": "William Simoni",
+  "license": "MIT",
+  "dependencies": {
+    "btoa": "^1.2.1",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "express-validator": "^6.4.0",
+    "mathjs": "^6.6.4",
+    "moment": "^2.24.0",
+    "node-fetch": "^2.6.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.3"
+  }
+}
