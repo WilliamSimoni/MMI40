@@ -42,9 +42,9 @@ const request = {
     values: ['temp'],
     fleet: 'flt-4urixvulkwxr',
     aggregationFunction: 'mean',
-    timePeriod: {key: 'hour', number: 1},
+    timePeriod: {key: 'day', number: 4},
     start: 1584257168,
-    granularity: {key: 'second', number: 312},
+    granularity: {key: 'hour', number: 6},
     unit:'s',
     store: true
 }
@@ -69,15 +69,15 @@ const periods = [1587135594, 1587139194,
   ];
 
 const aggregateRequest = {
-    aggrFun: 'sum',
+    aggrFun: 'min',
     projectName: 'Prova',
     tags: [['bagno'], ['camera'], ['bagno','camera']],
     values: ['temp', 'humidity'],
     fleets: ['flt-4tera0062rzy'],
     periods: [{start: 1587131994, end: 1587181994}],
-    granularities: [{key:'hour', number:1}]
+    granularities: [{key:'minute', number:91}]
 }
 
-send(request).then((json) => console.log(json)).catch(err => console.log(err));
+send(request).then((json) => console.log(json.result[0].timeSeries)).catch(err => console.log(err));
 
 

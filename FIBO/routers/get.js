@@ -9,7 +9,7 @@ const { Database } = require('../database/db');
 const database = new Database();
 
 //For handling time mutations
-const { time, rounder, keyEnumeration } = require(`../FIBO_modules/time`);
+const { time, rounder, keyEnumeration, timeConverter } = require(`../FIBO_modules/time`);
 
 //For validating request
 const { validationResult, body } = require('express-validator');
@@ -204,43 +204,65 @@ router.post('/', [
         let timeSeriesStart;
 
         //defining timeSeriesStart
-        if (timePeriod){
-            timeSeriesStart = time.subtract(now,timePeriod.number, timePeriod.key);
+        if (timePeriod) {
+            timeSeriesStart = time.subtract(now, timePeriod.number, timePeriod.key);
         } else {
             timeSeriesStart = start;
         }
 
         //rounding timeSeriesStart at the beginning of the minute, hour, ... according to the value returned by rounder.roundPerTimePeriod
-        const minGranularity= rounder.roundPerTimePeriod(now,timeSeriesStart);
+        const minGranularity = rounder.roundPerTimePeriod(now, timeSeriesStart);
 
         let roundFactor;
-        if (keyEnumeration[minGranularity] < keyEnumeration[granularity.key]){
+        if (keyEnumeration[minGranularity] < keyEnumeration[granularity.key]) {
             roundFactor = granularity.key;
         } else {
             roundFactor = minGranularity;
         }
 
-        timeSeriesStart = time.round(timeSeriesStart,roundFactor);
         //rounding granularity by roundFactor
         granularity = rounder.roundGranularity(granularity.number, granularity.key, roundFactor);
 
-        //if start is defined then timeSeriesStart is increased to start
-        if (start && timePeriod){
+        
+        //if start is defined then timeSeriesStart is increased to the closest moment to rounded start
+        if (start && timePeriod) {
+            start = time.round(start, roundFactor);
             timeSeriesStart = time.nearestMoment(timeSeriesStart, granularity.number, granularity.key, start);
         }
 
+        let granularityRoundFactor = rounder.roundPerGranularity(timeConverter.convertSecond(granularity.number,granularity.key));
+        timeSeriesStart = time.nearestMoment(time.round(timeSeriesStart, granularityRoundFactor), granularity.number, granularity.key, timeSeriesStart);
+
         //defining end
-        if (!end){
-            end = time.round(now, roundFactor);
+        if (keyEnumeration[roundFactor] === 0) {
+            if (!end) {
+                end = time.nearestMoment(time.round(now, 'minute'), granularity.number, granularity.key, now);
+            } else {
+                end = time.nearestMoment(time.round(end, 'minute'), granularity.number, granularity.key, end);
+            }
         } else {
-            end = time.round(end, roundFactor);
+            if (!end) {
+                end = time.round(now, roundFactor);
+            } else {
+                end = time.round(end, roundFactor);
+            }
         }
 
         //aggregating data 
-        periods = [{start: timeSeriesStart, end: end}];
-        granularities = [{number:granularity.number, key: granularity.key}];
+        let periods = [{ start: timeSeriesStart, end: end }];
+        let granularities = [{ number: granularity.number, key: granularity.key }];
 
-        let result = await calculator.aggrFun(aggrFun,project,tags,values,[fleet],periods,granularities);
+        /*if (granularity.number !== 1 && keyEnumeration[roundFactor] !== 0) {
+            granularities.push({ number: 1, key: granularity.key });
+        }*/
+
+        //console.log(time.createPeriods(time.round(time.add(timeSeriesStart, 1, 'hour'), 'hour'), 1, 'hour', time.round(end, 'hour')));
+        //console.log(time.createPeriods(time.round(time.add(timeSeriesStart, 1, 'day'), 'day'), 1, 'day', time.round(end, 'day')));
+
+        let result = await calculator.aggrFun(aggrFun, project, tags, values, [fleet], periods, granularities);
+
+        console.log(timeSeriesStart, end, time.createPeriods(timeSeriesStart, granularity.number, granularity.key, end).length);
+        console.log(result.result[0].timeSeries.length + result.invalid[0].timeSeries.length, result.result[0].timeSeries.length,result.invalid[0].timeSeries.length )
 
         response.status(200).json({ status: 200, timeSeriesStart, granularity, result: result.result });
 
