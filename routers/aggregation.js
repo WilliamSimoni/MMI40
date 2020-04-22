@@ -90,6 +90,8 @@ router.post('/', [
                 ]]
             }
         */
+        
+        //console.log(periods);
 
         let dividedPeriods = {};
         for (period of periods){
@@ -98,6 +100,9 @@ router.post('/', [
                 dividedPeriods[period.start].push(time.createPeriods(period.start, granularity.number, granularity.key, period.end));
             }
         }
+
+        //console.log(dividedPeriods[periods[0].start]);
+
 
         let promises = [];
 

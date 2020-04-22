@@ -29,9 +29,9 @@ async function aggregation(aggrFun, projectName, tags, fleets, values, start, en
         for (let value of values) {
             finalResult.push({ tags, value, timeSeries: [] });
         }
-        return {finalResult, invalid: []};
+        return { finalResult, invalid: [] };
     }
-    
+
     let aggrCallback;
 
     switch (aggrFun) {
@@ -40,7 +40,7 @@ async function aggregation(aggrFun, projectName, tags, fleets, values, start, en
         case 'min': aggrCallback = min; break;
         case 'max': aggrCallback = max; break;
     }
-    
+
     let aggrResult = [];
     for (let item of periods) {
         aggrResult.push(aggrCallback(response, values, item));
@@ -52,14 +52,14 @@ async function aggregation(aggrFun, projectName, tags, fleets, values, start, en
         for (let value of values) {
             if (response.length > 0) {
                 if (response[0].payload[value]) {
-                    finalResult.push({ tags, value, timeSeries: item.result[value]});
+                    finalResult.push({ tags, value, timeSeries: item.result[value] });
                     invalid.push({ tags, value, timeSeries: item.invalid[value] });
                 }
             }
         }
     }
 
-    return {finalResult, invalid};
+    return { finalResult, invalid };
 }
 
 function sum(data, values, periods) {
@@ -80,9 +80,9 @@ function sum(data, values, periods) {
             if (item.payload[value]) {
                 while (periods[counter[value]] > moment.utc(item.timestamp_device).unix()) {
                     if (tmp[value] !== 0) {
-                        result[value].push({ time: periods[counter[value]], value: tmp[value] })
+                        result[value].push({ time: periods[counter[value]], value: tmp[value] });
                     } else {
-                        invalid[value].push({time: periods[counter[value]]})
+                        invalid[value].push({ time: periods[counter[value]] });
                     }
                     tmp[value] = 0;
                     counter[value]--;
@@ -92,7 +92,20 @@ function sum(data, values, periods) {
         }
     }
 
-    return {result, invalid};
+    for (let value of values) {
+        if (tmp[value] !== 0) {
+            result[value].push({ time: periods[counter[value]], value: tmp[value] });
+        } else {
+            invalid[value].push({ time: periods[counter[value]] });
+        }
+        counter[value]--;
+        while (counter[value] >= 0){
+            invalid[value].push({ time: periods[counter[value]] });
+            counter[value]--;
+        }
+    }
+
+    return { result, invalid };
 }
 
 function mean(data, values, periods) {
@@ -119,7 +132,7 @@ function mean(data, values, periods) {
                         mean = sum[value] / counterSum[value];
                         result[value].push({ time: periods[counter[value]], value: mean })
                     } else {
-                        invalid[value].push({time: periods[counter[value]]})
+                        invalid[value].push({ time: periods[counter[value]] })
                     }
 
                     sum[value] = 0;
@@ -129,12 +142,28 @@ function mean(data, values, periods) {
 
                 sum[value] += item.payload[value];
                 counterSum[value] += 1;
-                
+
             }
         }
     }
 
-    return {result, invalid};
+    for (let value of values) {
+        let mean;
+        if (counterSum[value] > 0) {
+            mean = sum[value] / counterSum[value];
+            result[value].push({ time: periods[counter[value]], value: mean })
+        } else {
+            invalid[value].push({ time: periods[counter[value]] })
+        }
+        counter[value]--;
+        while (counter[value] >= 0){
+            invalid[value].push({ time: periods[counter[value]] });
+            counter[value]--;
+        }
+    }
+
+
+    return { result, invalid };
 }
 
 
@@ -159,9 +188,9 @@ function min(data, values, periods) {
                         result[value].push({ time: periods[counter[value]], value: tmp[value] })
                         delete tmp[value]
                     } else {
-                        invalid[value].push({time: periods[counter[value]]})
+                        invalid[value].push({ time: periods[counter[value]] })
                     }
-                    
+
                     counter[value]--;
                 }
                 if (!tmp[value]) {
@@ -175,8 +204,21 @@ function min(data, values, periods) {
         }
     }
 
+    for (let value of values) {
+        if (tmp[value]) {
+            result[value].push({ time: periods[counter[value]], value: tmp[value] })
+            delete tmp[value]
+        } else {
+            invalid[value].push({ time: periods[counter[value]] })
+        }
+        counter[value]--;
+        while (counter[value] >= 0){
+            invalid[value].push({ time: periods[counter[value]] });
+            counter[value]--;
+        }
+    }
 
-    return {result, invalid};
+    return { result, invalid };
 }
 
 function max(data, values, periods) {
@@ -200,7 +242,7 @@ function max(data, values, periods) {
                         result[value].push({ time: periods[counter[value]], value: tmp[value] })
                         delete tmp[value]
                     } else {
-                        invalid[value].push({time: periods[counter[value]]})
+                        invalid[value].push({ time: periods[counter[value]] })
                     }
 
                     counter[value]--;
@@ -216,7 +258,21 @@ function max(data, values, periods) {
         }
     }
 
-    return {result, invalid};
+    for (let value of values) {
+        if (tmp[value]) {
+            result[value].push({ time: periods[counter[value]], value: tmp[value] })
+            delete tmp[value]
+        } else {
+            invalid[value].push({ time: periods[counter[value]] })
+        }
+        counter[value]--;
+        while (counter[value] >= 0){
+            invalid[value].push({ time: periods[counter[value]] });
+            counter[value]--;
+        }
+    }
+
+    return { result, invalid };
 }
 
 exports.aggregation = aggregation;

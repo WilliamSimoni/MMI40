@@ -205,9 +205,9 @@ const time = {
     createPeriods(start, number, key, end) {
         let moment = start;
         let timestamps = [];
-        end = this.subtract(end, number, key);
         while (moment <= end) {
             timestamps.push(moment);
+            console.log(moment, end);
             moment = this.add(moment, number, key);
         }
         return timestamps;
@@ -236,9 +236,9 @@ const rounder = {
      */
     roundPerTimePeriod(now, moment) {
         const length = now - moment;
-        if (length < 7200) return 'second';     //2 hour
-        if (length < 86400) return 'minute';    //24 hour
-        if (length < 2419200) return 'hour';    //28 days
+        if (length <= 7200) return 'second';     //2 hour
+        if (length <= 86400) return 'minute';    //24 hour
+        if (length <= 2419200) return 'hour';    //28 days
         return 'day';
     },
 
