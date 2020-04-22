@@ -70,7 +70,7 @@ function sum(data, values, periods) {
 
     for (let value of values) {
         tmp[value] = 0;
-        counter[value] = periods.length - 2;
+        counter[value] = periods.length - 1;
         result[value] = [];
         invalid[value] = [];
     }
@@ -105,7 +105,7 @@ function mean(data, values, periods) {
     for (let value of values) {
         sum[value] = 0;
         counterSum[value] = 0;
-        counter[value] = periods.length - 2;
+        counter[value] = periods.length - 1;
         result[value] = [];
         invalid[value] = [];
     }
@@ -148,7 +148,7 @@ function min(data, values, periods) {
     let invalid = {};
 
     for (let value of values) {
-        counter[value] = periods.length - 2;
+        counter[value] = periods.length - 1;
         result[value] = [];
         invalid[value] = [];
     }
@@ -189,7 +189,7 @@ function max(data, values, periods) {
     let invalid = {};
 
     for (let value of values) {
-        counter[value] = periods.length - 2;
+        counter[value] = periods.length - 1;
         result[value] = [];
         invalid[value] = [];
     }
