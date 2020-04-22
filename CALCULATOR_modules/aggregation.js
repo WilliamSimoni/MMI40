@@ -40,7 +40,7 @@ async function aggregation(aggrFun, projectName, tags, fleets, values, start, en
         case 'min': aggrCallback = min; break;
         case 'max': aggrCallback = max; break;
     }
-        
+    
     let aggrResult = [];
     for (let item of periods) {
         aggrResult.push(aggrCallback(response, values, item));
@@ -78,7 +78,7 @@ function sum(data, values, periods) {
     for (let item of data) {
         for (let value of values) {
             if (item.payload[value]) {
-                while (periods[counter[value]] > moment(item.timestamp_device).unix()) {
+                while (periods[counter[value]] > moment.utc(item.timestamp_device).unix()) {
                     if (tmp[value] !== 0) {
                         result[value].push({ time: periods[counter[value]], value: tmp[value] })
                     } else {
@@ -101,8 +101,6 @@ function mean(data, values, periods) {
     let counter = {};
     let result = {};
     let invalid = {};
-
-    console.log(periods);
 
     for (let value of values) {
         sum[value] = 0;
@@ -155,7 +153,7 @@ function min(data, values, periods) {
     for (let item of data) {
         for (let value of values) {
             if (item.payload[value]) {
-                while (periods[counter[value]] > moment(item.timestamp_device).unix()) {
+                while (periods[counter[value]] > moment.utc(item.timestamp_device).unix()) {
 
                     if (tmp[value]) {
                         result[value].push({ time: periods[counter[value]], value: tmp[value] })
@@ -196,7 +194,7 @@ function max(data, values, periods) {
     for (let item of data) {
         for (let value of values) {
             if (item.payload[value]) {
-                while (periods[counter[value]] > moment(item.timestamp_device).unix()) {
+                while (periods[counter[value]] > moment.utc(item.timestamp_device).unix()) {
 
                     if (tmp[value]) {
                         result[value].push({ time: periods[counter[value]], value: tmp[value] })
@@ -220,11 +218,5 @@ function max(data, values, periods) {
 
     return {result, invalid};
 }
-
-/*
-aggregation('mean', 'simoni', ['bagno', 'camera'], ['flt-4tera0062rzy'], ['temp', 'humidity'], null, null)
-    .then(res => { console.log(res) })
-    .catch(err => console.error(err));
-*/
 
 exports.aggregation = aggregation;
