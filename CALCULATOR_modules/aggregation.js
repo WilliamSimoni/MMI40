@@ -102,6 +102,8 @@ function mean(data, values, periods) {
     let result = {};
     let invalid = {};
 
+    console.log(periods);
+
     for (let value of values) {
         sum[value] = 0;
         counterSum[value] = 0;
@@ -113,11 +115,8 @@ function mean(data, values, periods) {
     for (let item of data) {
         for (let value of values) {
             if (item.payload[value]) {
-                
-
-                while (periods[counter[value]] > moment(item.timestamp_device).unix()) {
+                while (periods[counter[value]] > moment.utc(item.timestamp_device).unix()) {
                     let mean;
-
                     if (counterSum[value] > 0) {
                         mean = sum[value] / counterSum[value];
                         result[value].push({ time: periods[counter[value]], value: mean })
