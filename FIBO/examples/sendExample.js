@@ -21,7 +21,7 @@ async function send(request) {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Ik1hcmlvIiwicHJvamVjdG5hbWUiOiJzaW1vbmkiLCJmbGVldHNaZG1JZHMiOlsiZmx0LTR0ZXJhMDA2MnJ6eSJdLCJmbGVldElkcyI6WyI4ZThiZDg3NS0zZDBiLTQ4YTUtOTM5OS0zMDNkMDlhYzBhYWMiXSwiaWF0IjoxNTg3NDU1ODU4LCJleHAiOjE1ODc1NDIyNTh9.94sbXpj9FoZwn9y49SOpzpIzGHXR4uX79m8nwMZIwtw'
+            'Authorization':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlBpbm8iLCJwcm9qZWN0bmFtZSI6InByb3ZhIiwiZmxlZXRzWmRtSWRzIjpbImZsdC00dXJpeWpoc2hhcmsiXSwiZmxlZXRJZHMiOlsiM2E0ZjMwNTYtMTg3NC00OGY1LWJlZGUtOGE1NGY4NmYwYjI1Il0sImlhdCI6MTU4NzU0Mjg0MiwiZXhwIjoxNTg3NjI5MjQyfQ.SWp4mVVkvsU5LTzsBXbUos2yOtQqBxs7CP_XDtbADWc'
         },
         body: JSON.stringify(request),
     };
@@ -42,10 +42,9 @@ const request = {
     values: ['temp'],
     fleet: 'flt-4urixvulkwxr',
     aggregationFunction: 'mean',
-    //timePeriod: {key: 'day', number: 1},
+    timePeriod: {key: 'hour', number: 1},
     start: 1584257168,
-    end: 1584775568,
-    granularity: {key: 'minute', number: 30},
+    granularity: {key: 'second', number: 312},
     unit:'s',
     store: true
 }
@@ -53,9 +52,9 @@ const request = {
 //console.log(JSON.stringify(request, null, 2));
 
 const loginRequest = {
-    username:'Mario',
+    username:'Pino',
     password:'12345678',
-    projectName:'simoni'
+    projectName:'prova'
 }
 
 const periods = [1587135594, 1587139194,

@@ -196,7 +196,6 @@ const time = {
 
     nearestMoment(start, number, key, end) {
         let startMoment = start;
-        console.log(startMoment,end);
         while (startMoment <= end) {
             startMoment = this.add(startMoment, number, key);
         }
