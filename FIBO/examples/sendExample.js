@@ -42,7 +42,9 @@ const request = {
     values: ['temp'],
     fleet: 'flt-4urixvulkwxr',
     aggregationFunction: 'mean',
-    timePeriod: {key: 'day', number: 1},
+    //timePeriod: {key: 'day', number: 1},
+    start: 1584257168,
+    end: 1584775568,
     granularity: {key: 'minute', number: 30},
     unit:'s',
     store: true
@@ -77,6 +79,6 @@ const aggregateRequest = {
     granularities: [{key:'hour', number:1}]
 }
 
-send(request).then((json) => console.log(json.result[0].timeSeries)).catch(err => console.log(err));
+send(request).then((json) => console.log(json)).catch(err => console.log(err));
 
 

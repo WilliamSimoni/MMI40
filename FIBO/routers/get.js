@@ -221,12 +221,11 @@ router.post('/', [
         }
 
         timeSeriesStart = time.round(timeSeriesStart,roundFactor);
-        
         //rounding granularity by roundFactor
         granularity = rounder.roundGranularity(granularity.number, granularity.key, roundFactor);
 
         //if start is defined then timeSeriesStart is increased to start
-        if (start){
+        if (start && timePeriod){
             timeSeriesStart = time.nearestMoment(timeSeriesStart, granularity.number, granularity.key, start);
         }
 
