@@ -205,7 +205,8 @@ const time = {
     createPeriods(start, number, key, end) {
         let moment = start;
         let timestamps = [];
-        while (moment < end) {
+        end = this.subtract(end, number, key);
+        while (moment <= end) {
             timestamps.push(moment);
             moment = this.add(moment, number, key);
         }

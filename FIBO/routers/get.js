@@ -232,7 +232,9 @@ router.post('/', [
 
         //defining end
         if (!end){
-            end = now;
+            end = time.round(now, roundFactor);
+        } else {
+            end = time.round(end, roundFactor);
         }
 
         //aggregating data 
@@ -240,7 +242,7 @@ router.post('/', [
         granularities = [{number:granularity.number, key: granularity.key}];
 
         let result = await calculator.aggrFun(aggrFun,project,tags,values,[fleet],periods,granularities);
-        
+
         response.status(200).json({ status: 200, timeSeriesStart, granularity, result: result.result });
 
     } catch (err) {
