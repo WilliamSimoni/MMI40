@@ -40,10 +40,10 @@ const request = {
     projectName: 'Prova',
     timeSeries: [[{tag:'kitchen', value:'temp'}, {tag:'safe', value:'temp'}], [{tag:'safe', value:'temp'}]],
     fleet: 'flt-4urixvulkwxr',
-    aggrFunPerGroup: ['min', 'max'],
+    aggrFunPerGroup: ['sum', 'sum'],
     aggregationFunction: 'min',
-    timeRange: {key: 'minute', number: 10},
-    granularity: {key: 'second', number: 30},
+    timeRange: {key: 'hour', number: 100},
+    granularity: {key: 'minute', number: 10},
     unit:'s',
     store: true
 }
@@ -56,6 +56,8 @@ const loginRequest = {
     projectName:'prova'
 }
 
-send(request).then((json) => console.log(json.result)).catch(err => console.log(err));
+
+const start = Date.now();
+send(request).then((json) => {console.log(json.result[0].timeSeries, json.result[1].timeSeries); console.log(Date.now() - start)}).catch(err => console.log(err));
 
 

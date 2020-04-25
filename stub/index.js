@@ -1,7 +1,8 @@
 //setting environment variables with dotenv
 require('dotenv').config({path:__dirname+'/./../.env'});
+
 const PORT = process.env.STUB_PORT || 7777;
-console.log(PORT);
+
 //FIBO routes
 const {login} = require('./routers/login');
 const {logout} = require('./routers/logout');

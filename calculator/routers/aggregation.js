@@ -1,4 +1,4 @@
-const rules = require('../rules/rules');
+const rules = require('../../calculator configuration/rules');
 
 //Get data from ZDM
 const { IoTData } = require('../../custom-modules/getIotData');
@@ -15,7 +15,7 @@ const express = require('express');
 const router = express.Router();
 
 //aggregation functions
-const { sum } = require('../CALCULATOR_modules/aggregationFunction');
+const { sum, mean, min, max } = require('../CALCULATOR_modules/aggregationFunction');
 
 
 class NothingFound extends Error {
@@ -183,6 +183,7 @@ router.post('/', [
                     throw new NothingFound('nothing found');
                 } else {
                     response = response.result;
+                    data[period.start] = response;
                 }
             } catch (err) {
                 if (!err instanceof NothingFound) {
@@ -190,15 +191,24 @@ router.post('/', [
                 }
                 data[period.start] = [];
             }
-            data[period.start] = response;
         }
 
         //TODO
+        let externalAggregationCallback;
 
+        switch(aggrFun){
+            case 'sum': externalAggregationCallback = sum; break
+            case 'mean': externalAggregationCallback = mean; break
+            case 'max': externalAggregationCallback = max; break
+            case 'min': externalAggregationCallback = min; break
+        }
+        
         let aggregatedData = [];
 
+
+
         for (period of periods) {
-            aggregatedData.push(sum(dataGroup, couples, data[period.start], dividedPeriods[period.start]));
+            aggregatedData.push(externalAggregationCallback(dataGroup, couples, data[period.start], dividedPeriods[period.start]));
             //console.log(sum(dataGroup, couples, data[period.start], dividedPeriods[period.start])[1].result);
         }
 
