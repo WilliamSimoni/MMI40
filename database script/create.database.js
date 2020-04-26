@@ -111,7 +111,7 @@ async function createDatabase(pool) {
             console.log(res);
         }
 
-        //CREATE VIEW
+        //CREATE VIEWS
         if (dbTablesName.indexOf('views') === -1) {
             const res = await client.query(
                 `CREATE TABLE views
@@ -217,10 +217,10 @@ async function createDatabase(pool) {
                     id uuid NOT NULL,
                     tag text NOT NULL,
                     value text NOT NULL,
-                    fleetid uuid NOT NULL,
+                    projectname text NOT NULL,
                     PRIMARY KEY (id),
-                    FOREIGN KEY (fleetid)
-                        REFERENCES data (id) MATCH SIMPLE
+                    FOREIGN KEY (projectname)
+                        REFERENCES project (name) MATCH SIMPLE
                         ON UPDATE NO ACTION
                         ON DELETE CASCADE
                         NOT VALID
@@ -350,15 +350,15 @@ async function createDatabase(pool) {
                 `CREATE TABLE relative
                 (
                     dataid uuid NOT NULL,
-                    fleetid uuid NOT NULL,
-                    PRIMARY KEY (dataid, fleetid),
+                    viewid uuid NOT NULL,
+                    PRIMARY KEY (dataid, viewid),
                     FOREIGN KEY (dataid)
                         REFERENCES data (id) MATCH SIMPLE
                         ON UPDATE NO ACTION
                         ON DELETE CASCADE
                         NOT VALID,
-                    FOREIGN KEY (fleetid)
-                        REFERENCES fleets (id) MATCH SIMPLE
+                    FOREIGN KEY (viewid)
+                        REFERENCES views (id) MATCH SIMPLE
                         ON UPDATE NO ACTION
                         ON DELETE CASCADE
                         NOT VALID
@@ -386,6 +386,33 @@ async function createDatabase(pool) {
             `);
             console.log(res);
         }
+
+        //CREATE ASSOCIATED
+        if (dbTablesName.indexOf('associated') === -1) {
+            const res = await client.query(
+                `CREATE TABLE associated
+                (
+                    tagofvalueid uuid NOT NULL,
+                    viewid uuid NOT NULL,
+                    PRIMARY KEY (tagofvalueid, viewid),
+                    FOREIGN KEY (tagofvalueid)
+                        REFERENCES tagsofvalue (id) MATCH SIMPLE
+                        ON UPDATE NO ACTION
+                        ON DELETE CASCADE
+                        NOT VALID,
+                    FOREIGN KEY (viewid)
+                        REFERENCES views (id) MATCH SIMPLE
+                        ON UPDATE NO ACTION
+                        ON DELETE CASCADE
+                        NOT VALID
+                )
+                WITH (
+                    OIDS = FALSE
+                );
+            `);
+            console.log(res);
+        }
+
 
     } finally {
         client.release()
