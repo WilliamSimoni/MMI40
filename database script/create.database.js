@@ -209,7 +209,7 @@ async function createDatabase(pool) {
             console.log(res);
         }
 
-        //CREATE TAGOFVALUE
+        //CREATE TAGSOFVALUE
         if (dbTablesName.indexOf('tagsofvalue') === -1) {
             const res = await client.query(
                 `CREATE TABLE tagsofvalue
@@ -217,9 +217,9 @@ async function createDatabase(pool) {
                     id uuid NOT NULL,
                     tag text NOT NULL,
                     value text NOT NULL,
-                    dataid uuid NOT NULL,
+                    fleetid uuid NOT NULL,
                     PRIMARY KEY (id),
-                    FOREIGN KEY (dataid)
+                    FOREIGN KEY (fleetid)
                         REFERENCES data (id) MATCH SIMPLE
                         ON UPDATE NO ACTION
                         ON DELETE CASCADE
@@ -229,6 +229,32 @@ async function createDatabase(pool) {
                     OIDS = FALSE
                 );
                 
+            `);
+            console.log(res);
+        }
+
+        //CREATE COMPOSED
+        if (dbTablesName.indexOf('composed') === -1) {
+            const res = await client.query(
+                `CREATE TABLE composed
+            (
+                tagofvalueid uuid NOT NULL,
+                dataid uuid NOT NULL,
+                PRIMARY KEY (tagofvalueid, dataid),
+                FOREIGN KEY (tagofvalueid)
+                    REFERENCES tagsofvalue (id) MATCH SIMPLE
+                    ON UPDATE NO ACTION
+                    ON DELETE CASCADE
+                    NOT VALID,
+                FOREIGN KEY (dataid)
+                    REFERENCES data (id) MATCH SIMPLE
+                    ON UPDATE NO ACTION
+                    ON DELETE CASCADE
+                    NOT VALID
+            )
+            WITH (
+                OIDS = FALSE
+            );
             `);
             console.log(res);
         }
