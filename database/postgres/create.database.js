@@ -111,15 +111,13 @@ async function createDatabase(pool) {
             console.log(res);
         }
 
-
-        //CREATE TAGS
-
-        if (dbTablesName.indexOf('tags') === -1) {
+        //CREATE VIEW
+        if (dbTablesName.indexOf('views') === -1) {
             const res = await client.query(
-                `CREATE TABLE tags
+                `CREATE TABLE views
                 (
                     id uuid NOT NULL,
-                    name text NOT NULL,
+                    name text,
                     projectname text NOT NULL,
                     PRIMARY KEY (id),
                     UNIQUE (name, projectname),
@@ -132,6 +130,58 @@ async function createDatabase(pool) {
                 WITH (
                     OIDS = FALSE
                 );
+                
+            `);
+            console.log(res);
+        }
+
+        //CREATE ENABLED
+        if (dbTablesName.indexOf('enabled') === -1) {
+            const res = await client.query(
+                `CREATE TABLE enabled
+                (
+                    fleetid uuid NOT NULL,
+                    viewid uuid NOT NULL,
+                    PRIMARY KEY (fleetid, viewid),
+                        FOREIGN KEY (viewid)
+                            REFERENCES views (id) MATCH SIMPLE
+                            ON UPDATE NO ACTION
+                            ON DELETE CASCADE
+                            NOT VALID,
+                        FOREIGN KEY (fleetid)
+                            REFERENCES fleets (id) MATCH SIMPLE
+                            ON UPDATE NO ACTION
+                            ON DELETE CASCADE
+                            NOT VALID
+                )
+                WITH (
+                    OIDS = FALSE
+                );
+                
+            `);
+            console.log(res);
+        }
+
+
+        //CREATE DATAGROUPS
+        if (dbTablesName.indexOf('datagroups') === -1) {
+            const res = await client.query(
+                `CREATE TABLE datagroups
+                (
+                    id uuid NOT NULL,
+                    aggregationfunction text NOT NULL,
+                    projectname text NOT NULL,
+                    PRIMARY KEY (id),
+                    FOREIGN KEY (projectname)
+                        REFERENCES project (name) MATCH SIMPLE
+                        ON UPDATE NO ACTION
+                        ON DELETE CASCADE
+                        NOT VALID
+                )
+                WITH (
+                    OIDS = FALSE
+                );
+                
             `);
             console.log(res);
         }
@@ -143,10 +193,34 @@ async function createDatabase(pool) {
                 (
                     id uuid NOT NULL,
                     aggregationfunction text NOT NULL,
-                    projectname text NOT NULL,
+                    datagroupid uuid NOT NULL,
                     PRIMARY KEY (id),
-                    FOREIGN KEY (projectname)
-                        REFERENCES project (name) MATCH SIMPLE
+                    FOREIGN KEY (datagroupid)
+                        REFERENCES datagroups (id) MATCH SIMPLE
+                        ON UPDATE NO ACTION
+                        ON DELETE CASCADE
+                        NOT VALID
+                )
+                WITH (
+                    OIDS = FALSE
+                );
+                
+            `);
+            console.log(res);
+        }
+
+        //CREATE TAGOFVALUE
+        if (dbTablesName.indexOf('tagsofvalue') === -1) {
+            const res = await client.query(
+                `CREATE TABLE tagsofvalue
+                (
+                    id uuid NOT NULL,
+                    tag text NOT NULL,
+                    value text NOT NULL,
+                    dataid uuid NOT NULL,
+                    PRIMARY KEY (id),
+                    FOREIGN KEY (dataid)
+                        REFERENCES data (id) MATCH SIMPLE
                         ON UPDATE NO ACTION
                         ON DELETE CASCADE
                         NOT VALID
@@ -177,11 +251,11 @@ async function createDatabase(pool) {
                     id uuid NOT NULL,
                     threshold integer NOT NULL,
                     type alarmtype NOT NULL,
-                    dataid uuid NOT NULL,
+                    tagofvalueid uuid NOT NULL,
                     active boolean NOT NULL,
                     PRIMARY KEY (id),
-                    FOREIGN KEY (dataid)
-                        REFERENCES data (id) MATCH SIMPLE
+                    FOREIGN KEY (tagofvalueid)
+                        REFERENCES tagsofvalue (id) MATCH SIMPLE
                         ON UPDATE NO ACTION
                         ON DELETE CASCADE
                         NOT VALID
@@ -269,54 +343,6 @@ async function createDatabase(pool) {
             `);
             console.log(res);
         }
-
-        //CREATE TAGGROUP
-        if (dbTablesName.indexOf('taggroup') === -1) {
-            const res = await client.query(
-                `CREATE TABLE taggroup
-                (
-                    id uuid NOT NULL,
-                    dataid uuid NOT NULL,
-                    PRIMARY KEY (id),
-                    FOREIGN KEY (dataid)
-                        REFERENCES data (id) MATCH SIMPLE
-                        ON UPDATE NO ACTION
-                        ON DELETE CASCADE
-                        NOT VALID
-                )
-                WITH (
-                    OIDS = FALSE
-                );
-        `);
-            console.log(res);
-        }
-
-        //CREATE ACCORDING
-        if (dbTablesName.indexOf('according') === -1) {
-            const res = await client.query(
-                `CREATE TABLE according
-                (
-                    tagid uuid NOT NULL,
-                    groupid uuid NOT NULL,
-                    PRIMARY KEY (tagid, groupid),
-                    FOREIGN KEY (tagid)
-                        REFERENCES tags (id) MATCH SIMPLE
-                        ON UPDATE NO ACTION
-                        ON DELETE CASCADE
-                        NOT VALID,
-                    FOREIGN KEY (groupid)
-                        REFERENCES taggroup (id) MATCH SIMPLE
-                        ON UPDATE NO ACTION
-                        ON DELETE CASCADE
-                        NOT VALID
-                )
-                WITH (
-                    OIDS = FALSE
-                );
-        `);
-            console.log(res);
-        }
-        
 
         //CREATE BLACKLIST
         if (dbTablesName.indexOf('tokensblacklist') === -1) {

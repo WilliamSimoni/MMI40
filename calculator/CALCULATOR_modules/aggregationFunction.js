@@ -10,14 +10,14 @@ function sumFun(dataGroups, couples, data, periods) {
     let tmp = [];
 
     //
-    // setting initial values for every couple and 
+    // setting initial values for every couple
     //
 
     for (let couple of couples) {
         let coupleTempData = [];
         for (let period of periods) {
             const tmpdataPeriod = {
-                sum: 0,
+                sum: null,
                 timeCounter: period.length - 1,
                 result: [],
                 invalid: []
@@ -27,13 +27,33 @@ function sumFun(dataGroups, couples, data, periods) {
         tmp.push(coupleTempData);
     }
 
+    //
+    // Not Empty Periods is an array which contains only periods with length > 0
+    //
+
     notEmptyPeriods = periods.filter(el => el.length > 0);
+
+    //
+    // for each item in the payload sent by ZDM.
+    //
 
     for (let item of data) {
 
+        //
+        // for each couple (tag,value)
+        //
+
         for (let i = 0; i < couples.length; i++) {
 
+            //
+            // if condition is true if the single item has tag equal to couple.tag and it has a payload which contains the couple.value
+            //
+
             if (item.tag === couples[i].tag && item.payload[couples[i].value]) {
+
+                //
+                // for each not Empty Period
+                //
 
                 for (let j = 0; j < notEmptyPeriods.length; j++) {
 
@@ -43,17 +63,24 @@ function sumFun(dataGroups, couples, data, periods) {
 
                     while (notEmptyPeriods[j][coupleTmpData.timeCounter] > moment.utc(item.timestamp_device).unix() && coupleTmpData.timeCounter > 0) {
 
-                        if (coupleTmpData.sum !== 0) {
+                        //
+                        // if at least one element is added up in a single period, then the sum is pushed in result array
+                        //
+
+                        if (coupleTmpData.sum) {
                             coupleTmpData.result.push({ time: notEmptyPeriods[j][coupleTmpData.timeCounter], value: coupleTmpData.sum });
+                            coupleTmpData.sum = null;
                         } else {
                             coupleTmpData.invalid.push({ time: notEmptyPeriods[j][coupleTmpData.timeCounter] });
                         }
 
-                        coupleTmpData.sum = 0;
                         if (coupleTmpData.timeCounter > 0)
                             coupleTmpData.timeCounter--;
 
                     }
+
+                    if (!coupleTmpData.sum)
+                        coupleTmpData.sum = 0;
 
                     coupleTmpData.sum += item.payload[couples[i].value];
 
@@ -71,7 +98,7 @@ function sumFun(dataGroups, couples, data, periods) {
         for (let j = 0; j < notEmptyPeriods.length; j++) {
             const coupleTmpData = tmp[i][j];
 
-            if (coupleTmpData.sum !== 0) {
+            if (coupleTmpData.sum) {
                 coupleTmpData.result.push({ time: notEmptyPeriods[j][coupleTmpData.timeCounter], value: coupleTmpData.sum });
             } else {
                 coupleTmpData.invalid.push({ time: notEmptyPeriods[coupleTmpData.timeCounter] });
@@ -105,7 +132,7 @@ function meanFun(dataGroups, couples, data, periods) {
         for (let period of periods) {
             const tmpdataPeriod = {
                 sum: 0,
-                elCounter: 0,
+                elCounter: null,
                 timeCounter: period.length - 1,
                 result: [],
                 invalid: []
@@ -131,22 +158,26 @@ function meanFun(dataGroups, couples, data, periods) {
 
                     while (notEmptyPeriods[j][coupleTmpData.timeCounter] > moment.utc(item.timestamp_device).unix() && coupleTmpData.timeCounter > 0) {
 
-                        if (coupleTmpData.elCounter !== 0) {
+                        if (coupleTmpData.elCounter) {
                             const mean = coupleTmpData.sum / coupleTmpData.elCounter
                             coupleTmpData.result.push({ time: notEmptyPeriods[j][coupleTmpData.timeCounter], value: mean });
+                            coupleTmpData.sum = 0;
+                            coupleTmpData.elCounter = null;
                         } else {
                             coupleTmpData.invalid.push({ time: notEmptyPeriods[j][coupleTmpData.timeCounter] });
                         }
 
-                        coupleTmpData.sum = 0;
-                        coupleTmpData.elCounter = 0;
                         if (coupleTmpData.timeCounter > 0)
                             coupleTmpData.timeCounter--;
 
                     }
 
                     coupleTmpData.sum += item.payload[couples[i].value];
-                    coupleTmpData.elCounter++;
+
+                    if (!coupleTmpData.elCounter)
+                        coupleTmpData.elCounter = 1;
+                    else 
+                        coupleTmpData.elCounter++;
 
                 }
             }
@@ -162,7 +193,7 @@ function meanFun(dataGroups, couples, data, periods) {
         for (let j = 0; j < notEmptyPeriods.length; j++) {
             const coupleTmpData = tmp[i][j];
 
-            if (coupleTmpData.elCounter !== 0) {
+            if (coupleTmpData.elCounter) {
                 const mean = coupleTmpData.sum / coupleTmpData.elCounter
                 coupleTmpData.result.push({ time: notEmptyPeriods[j][coupleTmpData.timeCounter], value: mean });
             } else {

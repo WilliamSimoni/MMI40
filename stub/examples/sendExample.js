@@ -21,7 +21,7 @@ async function send(request) {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlBpbm8iLCJwcm9qZWN0bmFtZSI6InByb3ZhIiwiZmxlZXRzWmRtSWRzIjpbImZsdC00dXJpeWpoc2hhcmsiXSwiZmxlZXRJZHMiOlsiM2E0ZjMwNTYtMTg3NC00OGY1LWJlZGUtOGE1NGY4NmYwYjI1Il0sImlhdCI6MTU4NzcyMjAxOSwiZXhwIjoxNTg3ODA4NDE5fQ.bHdH4uv7s-e9ZeSmWVTUbvKkdsvZ46R3bTFckSGECsw'
+            'Authorization':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlBpbm8iLCJwcm9qZWN0bmFtZSI6InByb3ZhIiwiZmxlZXRzWmRtSWRzIjpbImZsdC00dXJpeWpoc2hhcmsiXSwiZmxlZXRJZHMiOlsiYjczZTk2ZDktOWFhZC00YmUyLTgzZTQtMzQxNDJlYmViZjRjIl0sImlhdCI6MTU4ODAwMjAzNSwiZXhwIjoxNTg4MDg4NDM1fQ.3vxUZpKuRFCDBXzMIZlW1VsTtST8CN-GjQc-FV3tvfg'
         },
         body: JSON.stringify(request),
     };
@@ -41,7 +41,7 @@ const request = {
     timeSeries: [[{tag:'kitchen', value:'temp'}, {tag:'safe', value:'temp'}], [{tag:'safe', value:'temp'}]],
     fleet: 'flt-4urixvulkwxr',
     aggrFunPerGroup: ['sum', 'sum'],
-    aggregationFunction: 'min',
+    aggregationFunction: 'max',
     timeRange: {key: 'hour', number: 100},
     granularity: {key: 'minute', number: 10},
     unit:'s',
@@ -58,6 +58,6 @@ const loginRequest = {
 
 
 const start = Date.now();
-send(request).then((json) => {console.log(json.result[0].timeSeries, json.result[1].timeSeries); console.log(Date.now() - start)}).catch(err => console.log(err));
+send(request).then((json) => {console.log(json.result[1].timeSeries); console.log(Date.now() - start)}).catch(err => console.log(err));
 
 

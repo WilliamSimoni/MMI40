@@ -1,8 +1,6 @@
 const { Pool, Client } = require('pg');
 require('dotenv').config();
 
-console.log(process.env.PGPORT);
-
 const pool = new Pool({
     user: process.env.PGUSER,
     host: process.env.PGHOST,
@@ -14,28 +12,47 @@ const pool = new Pool({
 
 async function dropDatabase(pool) {
     const client = await pool.connect();
+
     try {
-        let res = await client.query(
-            `DROP TABLE IF EXISTS 
-                tags, 
-                project, 
-                data, 
-                tokensblacklist, 
-                superusers, 
-                alarms, 
-                access, 
-                roles, 
-                according, 
-                users,
-                fleets,
-                relative,
-                taggroup
-                CASCADE;
-        `);
+
+        const dbTables = await client.query(
+            ` 
+            SELECT
+                *
+            FROM
+                pg_catalog.pg_tables
+            WHERE
+                schemaname != 'pg_catalog'
+            AND schemaname != 'information_schema';
+            `
+        );
+
+        const dbTablesName = (() => {
+            const result = [];
+            for (let table of dbTables.rows) {
+                result.push(table.tablename);
+            }
+            return result;
+        })();
+
+        let query = 'DROP TABLE IF EXISTS ';
+
+        for (let i = 0; i < dbTablesName.length; i++){
+            if (i < dbTablesName.length - 1)
+                query += dbTablesName[i] + ', '
+            else
+                query += dbTablesName[i] + ' '
+        }
+
+        query += 'CASCADE;'
+
+        console.log(query);
+
+        let res = await client.query(query);
         res = await client.query(
             'DROP TYPE IF EXISTS alarmtype'
         );
-        console.log(res);
+        //console.log(res);
     } finally {
         client.release()
     }

@@ -153,6 +153,7 @@ class IoTData {
             const json = await response.json();
             return json;
         } catch (err) {
+            console.error(err);
             return this.getData(projectName, tags, fleets, start, end, retries - 1);
         }
 
