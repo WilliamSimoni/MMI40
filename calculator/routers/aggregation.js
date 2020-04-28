@@ -222,7 +222,7 @@ router.post('/', [
 
                 for (let couple of dataGroup[j].couples){
                     tags.push(couples[couple].tag);
-                    values.push(couples[couple].tag);
+                    values.push(couples[couple].value);
                 }
 
 
