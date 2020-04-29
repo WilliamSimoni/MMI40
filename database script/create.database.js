@@ -280,10 +280,16 @@ async function createDatabase(pool) {
                     threshold integer NOT NULL,
                     type alarmtype NOT NULL,
                     fleetid uuid NOT NULL,
+                    tagofvalueid uuid NOT NULL,
                     active boolean NOT NULL,
                     PRIMARY KEY (id),
                     FOREIGN KEY (fleetid)
                         REFERENCES fleets (id) MATCH SIMPLE
+                        ON UPDATE NO ACTION
+                        ON DELETE CASCADE
+                        NOT VALID,
+                    FOREIGN KEY (tagofvalueid)
+                        REFERENCES tagsofvalue  (id) MATCH SIMPLE
                         ON UPDATE NO ACTION
                         ON DELETE CASCADE
                         NOT VALID
