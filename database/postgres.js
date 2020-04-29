@@ -198,177 +198,6 @@ class PostgresDB {
         return res;
     }
 
-    //INSERT ACCESS
-    async insertAccess(roleId, dataId, projectName) {
-        const client = await this.pool.connect();
-        let res;
-        try {
-            //verify that roleID and dataID exists and are part of the same project
-            const verifyText = ` 
-        SELECT roles.id, data.id
-            FROM roles, data
-            WHERE roles.projectname = data.projectname
-                AND roles.id = $1
-                AND data.id = $2
-                AND roles.projectname = $3 
-        ;`;
-            const verifyParams = [roleId, dataId, projectName]
-            const verify = await client.query(verifyText, verifyParams);
-
-            if (!verify.rows[0]) {
-                throw new Error('can\'t insert');
-            }
-
-            const queryText = `INSERT INTO access (roleid, dataid) VALUES($1,$2)`;
-            const queryParams = [roleId, dataId];
-            res = await client.query(queryText, queryParams);
-        } finally {
-            client.release()
-        }
-
-        return res;
-    }
-
-    //INSERT DATA
-    async insertData(aggrFunName, aggrFunCode, projectName) {
-        const client = await this.pool.connect();
-        let res;
-        try {
-            const id = uuid.v4();
-            const queryText = `INSERT INTO data (id, aggregationfunctionname, aggregationfunctioncode, projectname) VALUES($1,$2,$3,$4)`;
-            const queryParams = [id, aggrFunName, aggrFunCode, projectName];
-            res = await client.query(queryText, queryParams);
-        } finally {
-            client.release()
-        }
-        return res;
-    }
-
-    //INSERT MULTIPLE DATA 
-    async insertMultipleData(data, deviceID, tagID, roleID, projectName) {
-        const client = await this.pool.connect();
-        let res;
-        try {
-            const queryTextData = `INSERT INTO data (id, aggregationfunctionname, aggregationfunctioncode, projectname) VALUES($1,$2,$3,$4)`;
-            const queryTextAlarm = `INSERT INTO alarms (id, threshold, type, dataid, activated) VALUES($1,$2,$3,$4,$5)`;
-            const queryTextAccording = `INSERT INTO according (tagid, dataid) VALUES($1,$2)`;
-            const queryTextAccess = `INSERT INTO access (roleid, dataid) VALUES($1,$2)`;
-            const queryTextSent = `INSERT INTO sent (deviceid, dataid) VALUES($1,$2)`;
-            for (let item of data) {
-                const dataID = uuid.v4();
-                //CREATE DATA
-                await client.query(queryTextData, [dataID, item.aggregationFunctionName, item.aggregationFunctionCode, projectName]);
-                //CREATE ALARM
-                for (let alm of item.alarm) {
-                    const almID = uuid.v4();
-                    await client.query(queryTextAlarm, [almID, alm.threshold, alm.type, dataID, true]);
-                }
-                //CREATE ACCORDING
-                for (let tag of item.keyword) {
-                    await client.query(queryTextAccording, [tagID[tag], dataID]);
-                }
-                //CREATE SENT
-                for (let dev of item.device) {
-                    await client.query(queryTextSent, [deviceID[dev], dataID]);
-                }
-                //CREATE ACCESS
-                for (let admRoles of item.admittedroles) {
-                    await client.query(queryTextAccess, [roleID[admRoles], dataID]);
-                }
-
-            }
-            res = 'end';
-        } finally {
-            client.release()
-        }
-        return res;
-    }
-
-    //INSERT ROLE
-    async insertRole(projectName, names) {
-        const client = await this.pool.connect();
-        let res = {};
-        try {
-            const queryText = `INSERT INTO roles VALUES($1,$2,$3)`
-            for (let name of names) {
-                const id = uuid.v4();
-                res[name] = id;
-                const queryParams = [id, name, projectName];
-                await client.query(queryText, queryParams);
-            }
-        } finally {
-            client.release()
-        }
-        return res;
-    }
-
-    //INSERT DEVICE
-    async insertDevice(devicesName, projectName) {
-        const client = await this.pool.connect();
-        let res = {};
-        try {
-            const queryText = `INSERT INTO devices (id, name, projectname) VALUES($1,$2,$3)`;
-            for (let deviceName of devicesName) {
-                const id = uuid.v4();
-                res[deviceName] = id;
-                const queryParams = [id, deviceName, projectName];
-                await client.query(queryText, queryParams);
-            }
-        } finally {
-            client.release()
-        }
-        return res;
-    }
-
-    //INSERT TAG
-    async insertTag(tagsName, projectName) {
-        const client = await this.pool.connect();
-        let res = {};
-        try {
-            const queryText = `INSERT INTO tags (id, name, projectname) VALUES($1,$2,$3)`;
-            for (let tagName of tagsName) {
-                const id = uuid.v4();
-                res[tagName] = id;
-                const queryParams = [id, tagName, projectName];
-                await client.query(queryText, queryParams);
-            }
-        } finally {
-            client.release()
-        }
-        return res;
-    }
-
-    //INSERT ACCORDING
-    async insertAccording(tagId, dataId, projectName) {
-        const client = await this.pool.connect();
-        let res;
-        try {
-            //verify that dataID and tagID are of the same project
-            const verifyText = ` 
-            SELECT * 
-                FROM tags, data
-                WHERE tags.projectname = data.projectname
-                    AND tags.projectname = $1
-                    AND tags.id = $2
-                    AND data.id = $3
-            ;`;
-            const verifyParams = [projectName, tagId, dataId]
-            const verify = await client.query(verifyText, verifyParams);
-
-            if (!verify.rows[0]) {
-                throw new Error('can\'t insert');
-            }
-
-            const id = uuid.v4();
-            const queryText = `INSERT INTO according (tagid, dataid) VALUES($1,$2)`;
-            const queryParams = [tagId, dataId];
-            res = await client.query(queryText, queryParams);
-        } finally {
-            client.release()
-        }
-        return res;
-    }
-
     //INSERT FLEETS
     async insertFleet(fleetid, projectName) {
         const client = await this.pool.connect();
@@ -399,7 +228,7 @@ class PostgresDB {
                 return 'username already exixsts';
             }
 
-            const psw = await bcrypt.hash(password, 5);
+            const psw = await bcrypt.hash(password, BCRYPT_SALT);
 
             const queryText = `INSERT INTO superusers (username, password) VALUES($1,$2)`;
             const queryParams = [username, psw];
@@ -418,7 +247,7 @@ class PostgresDB {
             const queryText = `INSERT INTO users VALUES($1,$2,$3,$4,$5)`;
             for (let user of users) {
                 const id = uuid.v4();
-                const psw = await bcrypt.hash(user.pass, 5);
+                const psw = await bcrypt.hash(user.pass, BCRYPT_SALT);
                 const queryParams = [id, user.name, psw, projectName, roleId[user.role]];
                 res = await client.query(queryText, queryParams);
             }
@@ -444,7 +273,7 @@ class PostgresDB {
             }
 
             const id = uuid.v4();
-            const psw = await bcrypt.hash(password, 5);
+            const psw = await bcrypt.hash(password, BCRYPT_SALT);
 
             //insert user
             await client.query(
@@ -511,6 +340,255 @@ class PostgresDB {
         }
         return res;
     }
+
+    //CREATION PROJECT FUNCTIONS
+    async createProject(superuser, projectName, workspace, zdmemail, zdmpassword, token, tokenExpires, users, fleets, enabledFleets, viewNames, tagOfValue, tagOfValuePerView, dataPerView, alarmPerView, overwrite) {
+
+        const client = await this.pool.connect();
+        try {
+
+            //
+            //Create project
+            //
+
+            projectName = projectName.replace(/\w+/g, (match) => match.toLowerCase());
+
+            const cryptedToken = await safe.encryptAsync(token);
+            const cryptedpsw = await safe.encryptAsync(zdmpassword);
+            const cryptedemail = await safe_email.encryptAsync(zdmemail);
+
+            const queryProject = `INSERT INTO project (name, token, tokenexpires, workspaceuid, zdmemail, zdmpassword, superuser) VALUES($1,$2,$3,$4,$5,$6,$7)`;
+            const ProjectParams = [projectName, cryptedToken, tokenExpires, workspace, cryptedemail, cryptedpsw, superuser];
+
+            await client.query(queryProject, ProjectParams);
+
+            let promises = [];
+
+            //
+            //create fleets
+            //
+
+            let fleetId = [];
+
+            for (let fleet of fleets) {
+                const id = uuid.v4();
+                fleetId.push(id);
+                const queryFleet = `INSERT INTO fleets (id, name, zdmfleetid, projectname) VALUES($1,$2,$3,$4)`;
+                const FleetParams = [id, fleet.name, fleet.id, projectName];
+                promises.push(client.query(queryFleet, FleetParams));
+            }
+
+            //
+            //create views
+            //
+
+            let viewId = [];
+
+            for (let view of viewNames) {
+                const id = uuid.v4();
+                viewId.push(id);
+                const queryView = `INSERT INTO views (id, name, projectname) VALUES($1,$2,$3)`;
+                const ViewParams = [id, view, projectName];
+                promises.push(client.query(queryView, ViewParams));
+            }
+
+            //
+            // create tagsOfValue
+            //
+
+            let tagOfValueId = [];
+
+            for (let item of tagOfValue) {
+                const id = uuid.v4();
+                tagOfValueId.push(id);
+                const queryTagOfValue = `INSERT INTO tagsofvalue (id, tag, value, projectname) VALUES($1,$2,$3,$4)`;
+                const TagOfValueParams = [id, item.tag, item.value, projectName];
+                promises.push(client.query(queryTagOfValue, TagOfValueParams));
+            }
+
+            //end first phase writing
+            await Promise.all(promises);
+
+            promises = [];
+
+            //
+            // create users
+            //
+
+            let usersID = [];
+
+            let queryAccessList = [];
+            let accessParamsList = [];
+
+            for (let user of users) {
+
+                const id = uuid.v4();
+                usersID.push(id);
+                const psw = await bcrypt.hash(user.pass, BCRYPT_SALT);
+                const queryUser = `INSERT INTO users (id, username, password, projectname) VALUES($1,$2,$3,$4)`;
+                const UserParams = [id, user.mail, psw, projectName];
+                promises.push(client.query(queryUser, UserParams));
+
+                //
+                //create access
+                //
+
+                for (let fleetIndex of user.fleets) {
+                    const queryAccess = `INSERT INTO access (userid, fleetid) VALUES($1,$2)`;
+                    const accessParams = [id, fleetId[fleetIndex]];
+                    queryAccessList.push(queryAccess);
+                    accessParamsList.push(accessParams);
+                }
+
+            }
+
+            //
+            // create dataGroup, data and composed
+            //
+
+            let dataGroupId = [];
+
+            let queryDataList = [];
+            let queryComposedList = [];
+            let queryRelativeList = [];
+            let dataParamsList = [];
+            let composedParamsList = [];
+            let relativeParamsList = [];
+
+            let dataId = [];
+
+            for (let i = 0; i < dataPerView.length; i++) {
+
+                for (let item of dataPerView[i]) {
+
+                    //
+                    // create datagroup
+                    //
+
+                    const dataGroupID = uuid.v4();
+                    dataGroupId.push(dataGroupID);
+                    const queryTagOfValue = `INSERT INTO datagroups (id, aggregationfunction, projectname) VALUES($1,$2,$3)`;
+                    const TagOfValueParams = [dataGroupID, item.aggrFun, projectName];
+                    promises.push(client.query(queryTagOfValue, TagOfValueParams));
+
+                    //
+                    // create relative query
+                    //
+
+                    const queryRelative = `INSERT INTO relative (datagroupid, viewid) VALUES($1,$2)`;
+                    const relativeParams = [dataGroupID, viewId[i]];
+                    queryRelativeList.push(queryRelative);
+                    relativeParamsList.push(relativeParams);
+
+                    //
+                    // create data query
+                    //
+
+                    for (let data of item.tagvalue) {
+                        const dataID = uuid.v4();
+                        dataId.push(dataID);
+                        const queryData = `INSERT INTO data (id, aggregationfunction, datagroupid) VALUES($1,$2,$3)`;
+                        const dataParams = [dataID, data.aggregation, dataGroupID];
+                        queryDataList.push(queryData);
+                        dataParamsList.push(dataParams);
+
+                        for (let tovIndex of data.tagOfValue) {
+
+                            //
+                            // create composed query
+                            //
+
+                            const queryComposed = `INSERT INTO composed (tagofvalueid, dataid) VALUES($1,$2)`;
+                            const composedParams = [tagOfValueId[tovIndex], dataID];
+                            queryComposedList.push(queryComposed);
+                            composedParamsList.push(composedParams);
+                        }
+
+                    }
+                }
+
+                //
+                // create alarms
+                //
+
+                const alarms = alarmPerView[i];
+
+                for (let enabledFleet of enabledFleets[i]) {
+
+                    //
+                    // create alarms, one for each enabled fleet
+                    //
+
+                    for (let alarm of alarms) {
+                        const alarmId = uuid.v4();
+                        const queryAlarm = `INSERT INTO alarms (id, tag, value, threshold, type, fleetid, tagofvalueid, active) VALUES($1,$2,$3,$4,$5,$6,$7,$8)`;
+                        const alarmParams = [alarmId, alarm.tag, alarm.value, alarm.threshold, alarm.type, fleetId[enabledFleet], tagOfValueId[alarm.tagvalueIndex], true];
+                        promises.push(client.query(queryAlarm, alarmParams));
+                    }
+                }
+
+                //
+                // create enabled
+                //
+
+                for (let item of enabledFleets[i]) {
+                    const queryEnabled = `INSERT INTO enabled (fleetid, viewid) VALUES($1,$2)`;
+                    const enabledParams = [fleetId[item], viewId[i]];
+                    promises.push(client.query(queryEnabled, enabledParams));
+                }
+
+                //
+                // create associated
+                //
+
+                for (let item of tagOfValuePerView[i]) {
+                    const queryAssociated = `INSERT INTO associated (tagofvalueid, viewid) VALUES($1,$2)`;
+                    const associatedParams = [tagOfValueId[item], viewId[i]];
+                    promises.push(client.query(queryAssociated, associatedParams));
+                }
+
+            }
+
+            await Promise.all(promises);
+
+            promises = [];
+
+            //insert data
+
+            for (let i = 0; i < dataParamsList.length; i++){
+                promises.push(client.query(queryDataList[i], dataParamsList[i]));
+            }
+
+            //insert access
+
+            for (let i = 0; i < accessParamsList.length; i++){
+                promises.push(client.query(queryAccessList[i], accessParamsList[i]));
+            }
+
+            //insert relative
+
+            for (let i = 0; i < relativeParamsList.length; i++){
+                promises.push(client.query(queryRelativeList[i], relativeParamsList[i]));
+            }
+
+            await Promise.all(promises);
+
+            promises = [];
+
+            // insert composed
+
+            for (let i = 0; i < composedParamsList.length; i++){
+                promises.push(client.query(queryComposedList[i], composedParamsList[i]));
+            }
+
+            Promise.all(promises);
+
+        } finally {
+            client.release()
+        }
+    }
+
+
 }
 
 exports.PostgresDB = PostgresDB;
