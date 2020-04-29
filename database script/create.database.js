@@ -357,11 +357,11 @@ async function createDatabase(pool) {
             const res = await client.query(
                 `CREATE TABLE relative
                 (
-                    dataid uuid NOT NULL,
+                    datagroupid uuid NOT NULL,
                     viewid uuid NOT NULL,
-                    PRIMARY KEY (dataid, viewid),
-                    FOREIGN KEY (dataid)
-                        REFERENCES data (id) MATCH SIMPLE
+                    PRIMARY KEY (datagroupid, viewid),
+                    FOREIGN KEY (datagroupid)
+                        REFERENCES datagroups (id) MATCH SIMPLE
                         ON UPDATE NO ACTION
                         ON DELETE CASCADE
                         NOT VALID,
