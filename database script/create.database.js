@@ -275,13 +275,15 @@ async function createDatabase(pool) {
                 `CREATE TABLE alarms
                 (
                     id uuid NOT NULL,
+                    tag text not NULL,
+                    value text not NULL,
                     threshold integer NOT NULL,
                     type alarmtype NOT NULL,
-                    tagofvalueid uuid NOT NULL,
+                    fleetid uuid NOT NULL,
                     active boolean NOT NULL,
                     PRIMARY KEY (id),
-                    FOREIGN KEY (tagofvalueid)
-                        REFERENCES tagsofvalue (id) MATCH SIMPLE
+                    FOREIGN KEY (fleetid)
+                        REFERENCES fleets (id) MATCH SIMPLE
                         ON UPDATE NO ACTION
                         ON DELETE CASCADE
                         NOT VALID
