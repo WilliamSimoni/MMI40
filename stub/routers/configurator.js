@@ -4,7 +4,7 @@ const router = express.Router();
 const { validationResult, body } = require('express-validator');
 
 const { Database } = require('../../database/db');
-const calculator = require(`../stub_modules/calculator`);
+const { legalFunctions } = require(`../../calculator configuration/rules`);
 
 //obtaining instance database
 const database = new Database();
@@ -15,91 +15,141 @@ router.post('/createproject', [
         .customSanitizer(projectName => projectName.replace(/\s+/g, ''))
         .isLength({ min: 1 }).withMessage('Project Name is not valid')
         .customSanitizer(projectName => projectName.replace(/\w+/g, (match) => match.toLowerCase())),
+    body('workspaceuid')
+        .isString().withMessage('workspaceuid not sent').bail()
+        .isLength({ min: 1 }).withMessage('workspaceuid not valid'),
+    body('username')
+        .isString().withMessage('username is not valid').bail()
+        .isLength({ min: 1 }).withMessage('username is not valid'),
+    body('password')
+        .isString().withMessage('username is not valid').bail()
+        .isLength({ min: 1 }).withMessage('username is not valid'),
+    body('viewNames')
+        .isArray({ min: 1 }).withMessage('viewName is not valid').bail()
+        .custom(viewName => {
+            for (let view of viewName) {
+                if (view.replace(/\s+/g, '').length === 0) {
+                    throw new Error('view inside viewName is empty')
+                }
+            }
+            return true;
+        }),
     body('users')
         .isArray().withMessage('users is not an array').bail()
         .custom((users, { req }) => {
-            const roles = req.body.roles;
-            if (Array.isArray(roles)) {
-                for (let user of users) {
-                    if (!user.name || !user.pass || !user.role) {
-                        throw new Error('a user has no name, no pass or role');
-                    }
-                    user.name = user.name.replace(/\s+/g, '');
-                    if (user.name.length === 0) {
-                        throw new Error('a user name is empty');
-                    }
-                    user.pass = user.pass.replace(/\s+/g, '');
-                    if (user.pass.length < 1) {
-                        throw new Error('user ' + user.name + ' pass is empty');
-                    }
-                    if (!roles.includes(user.role)) {
-                        throw new Error('role called ' + user.role + ' assigned to ' + user.role + ' does not exist');
+            const fleets = req.body.fleets;
+
+            if (!Array.isArray(fleets)) {
+                throw new Error('fleets property is not defined');
+            }
+
+            if (!Array.isArray(users)) {
+                throw new Error('users property is not defined');
+            }
+
+            if (users.length === 0) {
+                throw new Error('users property is empty');
+            }
+
+            let emails = [];
+
+            for (let i = 0; i < users.length; i++) {
+                const user = users[i];
+
+                if (! typeof user.mail === 'string' || ! typeof user.pass === 'string' || ! typeof user.role === 'string') {
+                    throw new Error(`user in users is not valid`)
+                }
+
+                if (user.mail.length === 0 || user.mail.length === 0 || user.length === 0) {
+                    throw new Error(`user in users is not valid`)
+                }
+
+                if (emails.includes(user.mail)) {
+                    throw new Error(`double user in users`)
+                }
+
+                if (!Array.isArray(user.fleets)) {
+                    throw new Error('user in users is not valid');
+                }
+
+                if (Math.min(...user.fleets) < 0 || Math.max(...user.fleets) >= fleets.length) {
+                    throw new Error('user.fleet in users is not valid, a fleet has index out of bound');
+                }
+
+                emails.push(user.mail);
+            }
+
+            return true;
+        }),
+    body('fleets')
+        .isArray({ min: 1 }).withMessage('fleets is not valid').bail()
+        .custom(fleets => {
+            for (let i = 0; i < fleets.length; i++) {
+                if (!fleets[i].name || !fleets[i].id) {
+                    throw new Error('fleet inside fleets is not valid');
+                }
+                if (typeof fleets[i].name !== 'string' || typeof fleets[i].id !== 'string') {
+                    throw new Error('fleet inside fleets is not valid');
+                }
+            }
+            return fleets;
+        }),
+    body('enabledFleets')
+        .isArray().withMessage('enabledFleet is not valid').bail()
+        .if(body('viewName').isArray())
+        .if(body('fleets').isArray())
+        .custom((enabledFleet, { req }) => {
+            const viewName = req.body.viewName;
+            const fleets = req.body.fleets;
+
+            if (viewName.length !== enabledFleet.length) {
+                throw new Error('enabledFleet is not valid, enabledFleet length != viewName length');
+            }
+
+            for (let enFleet of enabledFleet) {
+                if (Math.min(...enFleet) < 0 || Math.max(...enFleet) >= fleets.length) {
+                    throw new Error('enabledFleet in enabledFleet is not valid, a fleet has index out of bound');
+                }
+            }
+
+            return true;
+        }),
+    body('tagOfValue')
+        .isArray({ min: 1 }).withMessage('tagOfValue is not valid')
+        .custom(tagOfValue => {
+            for (let item of tagOfValue) {
+                if (typeof item.tag !== 'string' || typeof item.value !== 'string') {
+                    throw new Error('tagOfValue item is not valid');
+                }
+                if (item.tag.replace(/\s+/g, '').length === 0 || item.value.replace(/\s+/g, '').length === 0) {
+                    throw new Error('tagOfValue item is not valid');
+                }
+            }
+            return true;
+        }),
+    body('tagOfValuePerView')
+        .isArray({ min: 1 }),
+    body('dataPerView')
+        .isArray({ min: 1 })
+        .custom(dataPerView => {
+            for (let view of dataPerView) {
+                if (!Array.isArray(view)) {
+                    throw new Error('dataPerView is not valid');
+                }
+                for (let data of view) {
+                    if (!legalFunctions.includes(data.aggrFun)) {
+                        throw new Error('function ' + data.aggrFun + ' not supported yet');
                     }
                 }
             }
             return true;
         }),
-    body('roles')
-        .isArray({ min: 1 }).withMessage('roles is not an array or is an empty array').bail()
-        .custom(roles => {
-            for (let role of roles) {
-                role = role.replace(/\s+/g, '');
-                if (role.length === 0) {
-                    throw new Error('roles array contains not valid roles')
-                }
-            }
-            return true;
-        }),
-    body('devices')
-        .isArray({ min: 1 }).withMessage('devices is not an array or is an empty array').bail()
-        .custom(devices => {
-            for (let dev of devices) {
-                dev = dev.replace(/\s+/g, '');
-                if (dev.length === 0) {
-                    throw new Error('roles array contains not valid roles')
-                }
-            }
-            return true;
-        }),
-    body('keywords')
-        .isArray({ min: 1 }).withMessage('keywords is not an array or is an empty array').bail()
-        .custom(keywords => {
-            for (let key of keywords) {
-                key = key.replace(/\s+/g, '');
-                if (key.length === 0) {
-                    throw new Error('roles array contains not valid roles')
-                }
-            }
-            return true;
-        }),
-    body('data')
-        .isArray({ min: 1 }).withMessage('data is not an array or is an empty array').bail()
-        .custom(data => {
-            for (let item of data) {
-                if (!Array.isArray(item.device)) {
-                    throw new Error('a device property in data is not an array')
-                }
-                if (!Array.isArray(item.keyword)) {
-                    throw new Error('a keyword property in data is not an array')
-                }
-                if (!Array.isArray(item.alarm)) {
-                    throw new Error('a alarm property in data is not an array')
-                }
-                if (!Array.isArray(item.admittedroles)) {
-                    throw new Error('a admittedroles property in data is not an array')
-                }
-                if (!item.aggregationFunctionName) {
-                    throw new Error('aggregation function name not sent')
-                }
-                if (!calculator.legalFunctions.includes(item.aggregationFunctionName)) {
-                    throw new Error('aggregation function ' + item.aggregationFunctionName + ' not supported yet');
-                }
-                if (!item.aggregationFunctionCode) {
-                    throw new Error('aggregation function Code not sent')
-                }
-                if (!calculator.legalCodes(item.aggregationFunctionCode)) {
-                    throw new Error('aggregation function code ' + item.aggregationFunctionCode + ' not valid');
-                }
+    body('alarmPerView')
+        .isArray()
+        .if(body('viewNames').isArray())
+        .custom((alarmPerView, {req}) => {
+            if (alarmPerView.length !== req.body.viewNames.length){
+                throw new Error('alarmPerView is not valid, alarmPerView length != viewName length');
             }
             return true;
         }),
@@ -107,14 +157,11 @@ router.post('/createproject', [
         .isBoolean().withMessage('overwrite sent is not a boolean').bail(),
     body('token')
         .isString().withMessage('token not sent').bail()
-        .isLength({ min: 1 }).withMessage('token not valid'),
-    body('workspaceuid')
-        .isString().withMessage('workspaceuid not sent').bail()
-        .isLength({ min: 1 }).withMessage('workspaceuid not valid'),
+        .isLength({ min: 1 }).withMessage('token not valid')
 ], async (request, response) => {
-
     //handle validation error
     const errors = validationResult(request);
+
     if (!errors.isEmpty()) {
         const errArray = errors.array();
         let errResponse = [];
@@ -124,19 +171,26 @@ router.post('/createproject', [
         return response.status(400).json({ status: 400, errors: errResponse });
     }
 
+
     const {
         projectName,
-        devices,
-        keywords,
-        roles,
-        data,
-        users,
-        overwrite,
+        workspaceuid,
+        username,
+        password,
         token,
-        workspaceuid
+        tokenExpires,
+        users,
+        fleets,
+        enabledFleets,
+        viewNames,
+        tagOfValue,
+        tagOfValuePerView,
+        dataPerView,
+        alarmPerView,
+        overwrite,
     } = request.body;
 
-    const username = request.decoded.username;
+    const superuser = request.decoded.username;
 
     try {
 
@@ -146,31 +200,38 @@ router.post('/createproject', [
 
         if (preProject[0]) {
             //a project with the same name created by someone already exists
-            if (preProject[0].superuser !== username) {
+            if (preProject[0].superuser !== superuser) {
                 return response.status(450).json({ status: 450, errors: [`Someone has already created a project called ${projectName}`] });
             } else {
                 if (overwrite) {
-                    await database.deleteProject(projectName, username);
+                    await database.deleteProject(projectName, superuser);
                 } else {
                     return response.status(451).json({ status: 451, errors: [`you have already created a project called ${projectName}`] });
                 }
             }
         }
-
-        //insert the project
-        await database.insertProject(projectName, token, workspaceuid, username);
-        //insert roles
-        const roleId = await database.insertRole(projectName, roles);
-        //insert devices
-        const deviceId = await database.insertDevice(devices, projectName);
-        //insert keywords
-        const keywordId = await database.insertTag(keywords, projectName);
-        //insert users
-        await database.insertUsers(users, projectName, roleId);
-        //insert data
-        await database.insertMultipleData(data, deviceId, keywordId, roleId, projectName);
+        
+        await database.createProject(
+            superuser,
+            projectName,
+            workspaceuid,
+            username,
+            password,
+            token,
+            tokenExpires,
+            users,
+            fleets,
+            enabledFleets,
+            viewNames,
+            tagOfValue,
+            tagOfValuePerView,
+            dataPerView,
+            alarmPerView,
+            overwrite,
+        );
 
         response.status(200).json({ status: 200 });
+        
     } catch (err) {
         console.error(err);
         response.status(400).json({ status: 400, errors: ['Something went wrong'] });
@@ -181,7 +242,7 @@ router.post('/ls', async (request, response) => {
     try {
         const username = request.decoded.username;
         const projects = await database.searchSuperuserProject(username);
-        response.status(200).json({ status: 200, projects});
+        response.status(200).json({ status: 200, projects });
     } catch (err) {
         console.error(err);
         response.status(400).json({ status: 400, errors: ['Something went wrong'] });
