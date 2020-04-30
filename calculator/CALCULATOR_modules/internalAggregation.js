@@ -25,6 +25,8 @@ function mergeTwoInvalidTimeSeries(timeSeries1, timeSeries2){
             i++; j++;
         }
     }
+
+    return result;
 }
 
 function mergeTwoTimeSeries(timeSeries1, timeSeries2, aggregationFunction) {

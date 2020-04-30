@@ -416,8 +416,7 @@ function internalAggregation(tmp, dataGroups, periods){
             case 'max': aggrFunCallBack = max; break;
             case 'mean': aggrFunCallBack = mean; break;
         }
-
-
+        
         for (let j = 0; j < periods.length; j++) {
             let dataGroupSeriesResult = [];
             let dataGroupSeriesInvalid = [];
