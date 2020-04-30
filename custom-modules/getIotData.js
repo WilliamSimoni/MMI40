@@ -11,6 +11,9 @@ const database = new Database();
 const ENCRYPT_PASS = process.env.ENCRYPT_KEY;
 const ENCRYPT_KEY_USERNAME = process.env.ENCRYPT_KEY_USERNAME;
 
+//ONLY FOR DEVELOPMENT
+let login_counter = 0;
+
 class IoTData {
 
     constructor() {
@@ -23,10 +26,11 @@ class IoTData {
     //true if project token is present and it is not expired, false otherwise
     isToken(projectName) {
         if (this.tokens[projectName]) {
+            console.log(this.tokens[projectName].expires, moment.utc().unix())
             if (this.tokens[projectName].expires > moment.utc().unix()) {
-                return false;
-            } else {
                 return true;
+            } else {
+                return false;
             }
         } else {
             return false;
@@ -51,7 +55,7 @@ class IoTData {
     }
 
     //insert project into tokens
-    insertProject(projectname, token, expires, workspaceuid) {
+    insertProject(projectName, token, expires, workspaceuid) {
         //insert in tokens
         this.tokens[projectName] = {
             token: token,
@@ -79,6 +83,7 @@ class IoTData {
             const project = await this.getProject(projectName);
             //project does not exist anymore
             if (!project[0]) {
+                this.deleteProject(projectName);
                 return [];
             } else {
                 try {
@@ -86,9 +91,31 @@ class IoTData {
                     const credentials = await Promise.all(cryptedCredentials)
                         .then(response => {
                             return { email: response[0], pass: response[1] }
-                        })
-                    const token = await getToken(credentials.email, credentials.pass);
-                    await this.updateToken(projectName, token.data.token, token.data.expires, project[0].workspaceuid);
+                        });
+                    let token;
+                    if (Number(project[0].tokenexpires) < moment.utc().unix()){
+                        console.log('login ZDM');
+                        
+                        //
+                        // DEVELOPMENT ONLY BLOCK
+                        //
+                        
+                        login_counter++;
+                        if (login_counter > 1){
+                            throw new Error('too much login');
+                        }
+
+                        //
+                        // DEVELOPMENT ONLY BLOCK
+                        //
+                        
+                        token = await getToken(credentials.email, credentials.pass);
+                        await this.updateToken(projectName, token.data.token, token.data.expires, project[0].workspaceuid);
+                    } else {
+                        //console.log('qua', project[0].tokenexpires, moment.utc().unix());
+                        token = await this.safe.decryptAsync(project[0].token);
+                        this.insertProject(projectName, token, project[0].tokenexpires, project[0].workspaceuid);
+                    }
                 } catch (err) {
                     console.error(err);
                     return [];
@@ -96,6 +123,7 @@ class IoTData {
             }
         }
 
+        //console.log(login_counter);
 
         try {
             const result = await this.getDataExecuter(projectName,

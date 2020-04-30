@@ -21,7 +21,7 @@ async function send(request) {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlBpbm8iLCJwcm9qZWN0bmFtZSI6InByb3ZhIiwiZmxlZXRzWmRtSWRzIjpbImZsdC00dXJpeWpoc2hhcmsiXSwiZmxlZXRJZHMiOlsiYjczZTk2ZDktOWFhZC00YmUyLTgzZTQtMzQxNDJlYmViZjRjIl0sImlhdCI6MTU4ODAwMjAzNSwiZXhwIjoxNTg4MDg4NDM1fQ.3vxUZpKuRFCDBXzMIZlW1VsTtST8CN-GjQc-FV3tvfg'
+            'Authorization':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwicHJvamVjdG5hbWUiOiJwcm92YSIsImZsZWV0c1pkbUlkcyI6WyJmbHQtNHVyaXducnBsNHU2IiwiZmx0LTR1cml4dnVsa3d4ciIsImZsdC00dXJpeWpoc2hhcmsiXSwiZmxlZXRJZHMiOlsiYjk5NTdmMWItMjJkMC00MGViLWJiZDEtNzBlZTY2OTRhOTZkIiwiN2M3NjlhYjItYjFlNi00ZWZkLWI2ODAtNjdmZjhhOTI1ZmQ4IiwiNmQ4ZWE5ZTItYzA3NC00NTgyLTg1NjctZDMyMjExNjQzY2QwIl0sImlhdCI6MTU4ODIzNzE2NywiZXhwIjoxNTg4MzIzNTY3fQ.K6HfWth1tjim3XPuM3LWG-mGArIzXouLOY5XMUte6Qk'
         },
         body: JSON.stringify(request),
     };
@@ -38,12 +38,14 @@ start: moment.utc().subtract(2,'week').startOf('week').unix(),
 
 const request = {
     projectName: 'Prova',
-    timeSeries: [[{tag:'kitchen', value:'temp'}, {tag:'safe', value:'temp'}], [{tag:'safe', value:'temp'}]],
+    timeSeries: [[
+        { tag:"first floor", value: "temp" }
+    ]],
     fleet: 'flt-4urixvulkwxr',
-    aggrFunPerGroup: ['sum', 'sum'],
+    aggrFunPerGroup: ['max'],
     aggregationFunction: 'max',
-    timeRange: {key: 'hour', number: 100},
-    granularity: {key: 'minute', number: 10},
+    timeRange: {key: 'hour', number: 10},
+    granularity: {key: 'minute', number: 2},
     unit:'s',
     store: true
 }
@@ -51,13 +53,19 @@ const request = {
 //console.log(JSON.stringify(request, null, 2));
 
 const loginRequest = {
-    username:'Pino',
-    password:'12345678',
+    username:'admin',
+    password:'admin',
     projectName:'prova'
 }
 
 
 const start = Date.now();
-send(request).then((json) => {console.log(json.result[1].timeSeries); console.log(Date.now() - start)}).catch(err => console.log(err));
+send(request).then((json) => {console.log(json); console.log(Date.now() - start)}).catch(err => console.log(err));
 
 
+async function tryFun(request){
+    while(true){
+        const start = Date.now();
+        await send(request).then((json) => {console.log(json); console.log(Date.now() - start)}).catch(err => console.log(err));
+    }
+}
