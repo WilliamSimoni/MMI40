@@ -75,11 +75,13 @@ class IoTData {
     }
 
     async getData(projectName, tags, fleets, start, end, retries) {
+        console.log(retries);
         if (retries === 0) {
             return [];
         }
         //obtain token
         if (!this.isToken(projectName)) {
+            console.log('token does not found');
             const project = await this.getProject(projectName);
             //project does not exist anymore
             if (!project[0]) {
@@ -122,8 +124,6 @@ class IoTData {
                 }
             }
         }
-
-        //console.log(login_counter);
 
         try {
             const result = await this.getDataExecuter(projectName,
@@ -174,14 +174,20 @@ class IoTData {
             queryEnd = `&end=${moment.unix(end).toISOString()}`
         }
         const query = `${this.API_URL}/${workspaceuid}?sort=-timestamp_device&size=-1${queryTag}${queryFleet}${queryStart}${queryEnd}`;
-        
+
         let response;
         try {
             response = await fetch(query, options);
-            const json = await response.json();
+            let json;
+            if (response.ok){
+                json = await response.json();
+            } else {
+                json = await response.text();
+                throw new Error('server respond:\n' + json + '\nWith query: ' + query);
+            }
             return json;
         } catch (err) {
-            console.error(err);
+            console.error(err.message);
             return this.getData(projectName, tags, fleets, start, end, retries - 1);
         }
 
