@@ -342,14 +342,17 @@ class PostgresDB {
     }
 
     //CREATION PROJECT FUNCTIONS
+    //the function exec a unic transaction 
     async createProject(superuser, projectName, workspace, zdmemail, zdmpassword, token, tokenExpires, users, fleets, enabledFleets, viewNames, tagOfValue, tagOfValuePerView, dataPerView, alarmPerView, overwrite) {
 
         const client = await this.pool.connect();
         try {
 
+            await client.query('BEGIN');
+
             //
             //Create project
-            //
+            //  
 
             projectName = projectName.replace(/\w+/g, (match) => match.toLowerCase());
 
@@ -583,6 +586,11 @@ class PostgresDB {
 
             Promise.all(promises);
 
+            await client.query('COMMIT')
+        
+        } catch (err) {
+            await client.query('ROLLBACK');
+            throw err;
         } finally {
             client.release()
         }
