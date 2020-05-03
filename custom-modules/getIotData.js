@@ -1,18 +1,45 @@
 const fetch = require('node-fetch');
 const moment = require('moment');
 const btoa = require('btoa');
+
+//
+// errors class
+//
+
+const error = require('./errors');
+
+//
+// delay function
+//
+
+const { delay } = require('./delay');
+
+const DELAY_CONST = 50;
+
+//
+//for encryption/decryption of data
+//
+
 const { Safe } = require('./safe');
 
+//
 //database
+//
+
 const { Database } = require('../database/db');
 const database = new Database();
 
-//create encryption object for encrypt tokens
+//
+//get encryption keys from env file
+//
+
 const ENCRYPT_PASS = process.env.ENCRYPT_KEY;
 const ENCRYPT_KEY_USERNAME = process.env.ENCRYPT_KEY_USERNAME;
 
 //ONLY FOR DEVELOPMENT
+
 let login_counter = 0;
+
 
 class IoTData {
 
@@ -64,7 +91,12 @@ class IoTData {
         }
     }
 
-    //delete project from tokens
+
+    /**
+     * delete project from tokens
+     * @param {string} projectname 
+     */
+
     deleteProject(projectname) {
         if (this.tokens[projectname]) {
             delete this.tokens[projectname];
@@ -74,71 +106,106 @@ class IoTData {
         }
     }
 
-    async getData(projectName, tags, fleets, start, end, retries) {
+    /**
+     * function to request data to ZDM.
+     * @param {string} projectName - project name from wich search credentials for get data
+     * @param {string[]} tags - tags used in the zdm query
+     * @param {string[]} fleets - fleets used in the zdm query
+     * @param {number} start - timestamp indicating when to start receiving data
+     * @param {number} end - timestamp indicating when to end receiving data
+     * @param {number} retries - number of retries
+     * @param {number} [delayExec=0] - delay expressed in millisecond before try to ask data to ZDM
+     * @throws {Error} if retries is 0 or if parameters are not defined or if something went wrong. If retries is 0 then Error is TooMuchRetriesError instance. If parameters are not defined then error is ParametersError instance. If project does not exist than error is ProjectNotExistError instace.
+     * @returns {Promise} 
+     */
+
+    async getData(projectName, tags, fleets, start, end, retries, delayExec) {
+
+        //
+        // checking parameters
+        //
+
+        if (
+            typeof projectName !== 'string'
+            || !Array.isArray(tags)
+            || !Array.isArray(fleets)
+            || typeof start !== 'number'
+            || typeof end !== 'number'
+            || typeof start !== 'number'
+            || typeof retries !== 'number') {
+            throw new error.ParametersError('parameters error');
+        }
+
+        //
+        // checking retries count
+        //
+
         console.log(retries);
         if (retries === 0) {
-            return [];
+            throw new error.TooMuchRetriesError();
         }
+
+        if (!delayExec) {
+            delayExec = 0;
+        } else {
+            await delay(delayExec);
+        }
+
         //obtain token
         if (!this.isToken(projectName)) {
             console.log('token does not found');
             const project = await this.getProject(projectName);
             //project does not exist anymore
             if (!project[0]) {
-                this.deleteProject(projectName);
-                return [];
-            } else {
-                try {
-                    const cryptedCredentials = [this.safe_email.decryptAsync(project[0].zdmemail), this.safe.decryptAsync(project[0].zdmpassword)];
-                    const credentials = await Promise.all(cryptedCredentials)
-                        .then(response => {
-                            return { email: response[0], pass: response[1] }
-                        });
-                    let token;
-                    if (Number(project[0].tokenexpires) < moment.utc().unix()){
-                        console.log('login ZDM');
-                        
-                        //
-                        // DEVELOPMENT ONLY BLOCK
-                        //
-                        
-                        login_counter++;
-                        if (login_counter > 1){
-                            throw new Error('too much login');
-                        }
 
-                        //
-                        // DEVELOPMENT ONLY BLOCK
-                        //
-                        
-                        token = await getToken(credentials.email, credentials.pass);
-                        await this.updateToken(projectName, token.data.token, token.data.expires, project[0].workspaceuid);
-                    } else {
-                        //console.log('qua', project[0].tokenexpires, moment.utc().unix());
-                        token = await this.safe.decryptAsync(project[0].token);
-                        this.insertProject(projectName, token, project[0].tokenexpires, project[0].workspaceuid);
+                this.deleteProject(projectName);
+                throw new error.ProjectNotExistError();
+
+            } else {
+
+                const cryptedCredentials = [this.safe_email.decryptAsync(project[0].zdmemail), this.safe.decryptAsync(project[0].zdmpassword)];
+                const credentials = await Promise.all(cryptedCredentials)
+                    .then(response => {
+                        return { email: response[0], pass: response[1] }
+                    });
+
+                let token;
+                if (Number(project[0].tokenexpires) < moment.utc().unix()) {
+                    console.log('login ZDM');
+
+                    //
+                    // DEVELOPMENT ONLY BLOCK
+                    //
+
+                    login_counter++;
+                    if (login_counter > 1) {
+                        throw new Error('too much login');
                     }
-                } catch (err) {
-                    console.error(err);
-                    return [];
+
+                    //
+                    // DEVELOPMENT ONLY BLOCK
+                    //
+
+                    token = await getToken(credentials.email, credentials.pass);
+                    await this.updateToken(projectName, token.data.token, token.data.expires, project[0].workspaceuid);
+                } else {
+                    //console.log('qua', project[0].tokenexpires, moment.utc().unix());
+                    token = await this.safe.decryptAsync(project[0].token);
+                    this.insertProject(projectName, token, project[0].tokenexpires, project[0].workspaceuid);
                 }
+
             }
         }
 
-        try {
             const result = await this.getDataExecuter(projectName,
                 this.tokens[projectName].token,
                 this.tokens[projectName].workspaceuid,
-                tags, fleets, start, end, retries);
+                tags, fleets, start, end, retries, delayExec);
             return result;
-        } catch (err) {
-            console.error(err);
-            return [];
-        }
 
     }
 
-    async getDataExecuter(projectName, token, workspaceuid, tags, fleets, start, end, retries) {
+    async getDataExecuter(projectName, token, workspaceuid, tags, fleets, start, end, retries, delay) {
 
         const options = {
             method: 'GET',
@@ -179,7 +246,7 @@ class IoTData {
         try {
             response = await fetch(query, options);
             let json;
-            if (response.ok){
+            if (response.ok) {
                 json = await response.json();
             } else {
                 json = await response.text();
@@ -188,7 +255,7 @@ class IoTData {
             return json;
         } catch (err) {
             console.error(err.message);
-            return this.getData(projectName, tags, fleets, start, end, retries - 1);
+            return this.getData(projectName, tags, fleets, start, end, retries - 1, delay + DELAY_CONST);
         }
 
     }

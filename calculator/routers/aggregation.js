@@ -1,12 +1,17 @@
 const rules = require('../../calculator configuration/rules');
 
+//
 //Get data from ZDM
+//
+
 const { IoTData } = require('../../custom-modules/getIotData');
 
 const iotData = new IoTData();
 
-
+//
 //For validating request
+//
+
 const { validationResult, body } = require('express-validator');
 const { time, keyEnumeration } = require('../../custom-modules/time');
 
@@ -17,13 +22,11 @@ const router = express.Router();
 //aggregation functions
 const { sum, mean, min, max } = require('../CALCULATOR_modules/aggregationFunction');
 
+//
+// errors class
+//
 
-class NothingFound extends Error {
-    constructor(message) {
-        super(message);
-        this.name = this.constructor.name;
-    }
-}
+const error = require('../../custom-modules/errors');
 
 router.post('/', [
     body('aggrFun')
@@ -172,7 +175,8 @@ router.post('/', [
             }
         }
 
-        let promises = [];
+        //TODO let promises = [];
+
         let data = {};
 
         for (let period of periods) {
@@ -180,14 +184,14 @@ router.post('/', [
             try {
                 response = await iotData.getData(projectName, tags, [fleet], period.start, period.end, 2);
                 if (!response.result) {
-                    throw new NothingFound('nothing found');
+                    throw new error.NothingFoundError('nothing found');
                 } else {
                     response = response.result;
                     data[period.start] = response;
                 }
             } catch (err) {
-                if (!err instanceof NothingFound) {
-                    console.error(err)
+                if (!(err instanceof error.NothingFoundError)) {
+                    throw err;
                 }
                 data[period.start] = [];
             }
@@ -234,7 +238,12 @@ router.post('/', [
         return response.status(200).json({ status: 200, result });
 
     } catch (err) {
-        console.error(err);
+        if (!(err instanceof error.TooMuchRetriesError || err instanceof error.ProjectNotExistError)){
+            console.error(err);
+        }
+        if (err instanceof error.TooMuchRetriesError){
+            return response.status(401).json({ status: 401, errors: ['problem connecting to ZDM'] });
+        }
         return response.status(400).json({ status: 400, errors: ['something went wrong'] });
     }
 

@@ -257,7 +257,18 @@ router.post('/', [
 
         periods = [{ start: timeSeriesStart, end: end }];
 
-        const result = await calculator.aggrFun(aggrFun, project, timeSeries, fleet, aggrFunPerGroup, periods, granularity, minGranularity);
+        let result = await calculator.aggrFun(aggrFun, project, timeSeries, fleet, aggrFunPerGroup, periods, granularity, minGranularity);
+
+        //
+        //calculator error handling
+        //
+
+        if (result.status !== 200){
+            if (result.status === 401)
+                return response.status(420).json({ status: 421, errors: ['error connecting to ZDM']});
+            else
+                return response.status(420).json({ status: 422, errors: ['error during aggregation']});
+        }
 
         response.status(200).json({ status: 200, timeSeriesStart, granularity, start: moment.unix(timeSeriesStart).toISOString(), end: moment.unix(end).toISOString(), result: result.result });
 
