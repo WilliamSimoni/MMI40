@@ -143,7 +143,7 @@ router.post('/', [
             //calculate sub-intervals based on granularity chosen by client
             dividedPeriods[period.start].push(time.createPeriods(period.start, granularity.number, granularity.key, period.end));
             //calculate sub-intervals with standard granularities
-            if (roundFactor === 'second'){
+            if (roundFactor === 'second') {
                 roundFactor = 'minute';
             }
             const standardgranularity = Object.keys(keyEnumeration).filter(value => keyEnumeration[value] >= keyEnumeration[roundFactor]);
@@ -200,13 +200,13 @@ router.post('/', [
         //TODO
         let externalAggregationCallback;
 
-        switch(aggrFun){
+        switch (aggrFun) {
             case 'sum': externalAggregationCallback = sum; break
             case 'mean': externalAggregationCallback = mean; break
             case 'max': externalAggregationCallback = max; break
             case 'min': externalAggregationCallback = min; break
         }
-        
+
         let aggregatedData = [];
 
 
@@ -218,36 +218,47 @@ router.post('/', [
 
         let result = [];
 
-        for (let i = 0; i < aggregatedData.length; i++){
-            for (let j = 0; j < dataGroup.length; j++){
+        for (let j = 0; j < dataGroup.length; j++) {
 
-                let tags = [];
-                let values = [];
+            //
+            // selecting tags and value for the data group
+            //
 
-                for (let couple of dataGroup[j].couples){
-                    tags.push(couples[couple].tag);
-                    values.push(couples[couple].value);
-                }
+            let tags = [];
+            let values = [];
 
-
-                result.push({tags, values, timeSeries: aggregatedData[i][j].result[0]});
+            for (let couple of dataGroup[j].couples) {
+                tags.push(couples[couple].tag);
+                values.push(couples[couple].value);
             }
+
+            //
+            // merging different periods in one time Series
+            //
+
+            let tmpTimeSeries = [];
+            
+            for (let i = 0; i < periods.length; i++) {
+                tmpTimeSeries = [...tmpTimeSeries, ...aggregatedData[i][j].result[0]];
+            }
+
+            result.push({ tags, values, timeSeries: tmpTimeSeries });
         }
 
 
         return response.status(200).json({ status: 200, result });
 
     } catch (err) {
-        if (!(err instanceof error.TooMuchRetriesError || err instanceof error.ProjectNotExistError || err instanceof error.FleetNotExistError)){
+        if (!(err instanceof error.TooMuchRetriesError || err instanceof error.ProjectNotExistError || err instanceof error.FleetNotExistError)) {
             console.error(err);
         }
-        
-        if (err instanceof error.TooMuchRetriesError){
-            return response.status(401).json({ status: 401, error : err.message });
+
+        if (err instanceof error.TooMuchRetriesError) {
+            return response.status(401).json({ status: 401, error: err.message });
         }
 
-        if (err instanceof error.FleetNotExistError){
-            return response.status(402).json({status: 402, error: err.message});
+        if (err instanceof error.FleetNotExistError) {
+            return response.status(402).json({ status: 402, error: err.message });
         }
 
         return response.status(400).json({ status: 400, error: 'something went wrong' });
