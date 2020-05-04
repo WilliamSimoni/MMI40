@@ -19,9 +19,6 @@ const { time, keyEnumeration } = require('../../custom-modules/time');
 const express = require('express');
 const router = express.Router();
 
-//aggregation functions
-const { sum, mean, min, max } = require('../CALCULATOR_modules/aggregationFunction');
-
 //
 // errors class
 //
