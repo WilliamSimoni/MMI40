@@ -267,7 +267,13 @@ router.post('/', [
             return response.status(421).json({ status: 421, errors: [result.error]});
         }
 
-        response.status(200).json({ status: 200, timeSeriesStart, granularity, start: moment.unix(timeSeriesStart).toISOString(), end: moment.unix(end).toISOString(), result: result.result });
+        //
+        // calculating next Request time range
+        //
+
+        const nextRequestTime = time.add(end, granularity.number, granularity.key) - now;
+
+        response.status(200).json({ status: 200, timeSeriesStart, granularity, start: moment.unix(timeSeriesStart).toISOString(), end: moment.unix(end).toISOString(), nextRequestTime, result: result.result });
 
     } catch (err) {
         console.error(err);
