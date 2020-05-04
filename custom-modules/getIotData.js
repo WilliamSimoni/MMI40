@@ -142,7 +142,7 @@ class IoTData {
 
         console.log(retries);
         if (retries === 0) {
-            throw new error.TooMuchRetriesError();
+            throw new error.TooMuchRetriesError('fail to fetch data from ZDM');
         }
 
         if (!delayExec) {
@@ -249,11 +249,25 @@ class IoTData {
             if (response.ok) {
                 json = await response.json();
             } else {
-                json = await response.text();
+                json = await response.text(); 
+
+                //
+                // check if is a fleet not found error, in that case it does not retry
+                //
+
+                if (/fleet not found/g.test(json)){
+                    throw new error.FleetNotExistError('a fleet in ' + fleets + 'does not exist');
+                }
+
                 throw new Error('server respond:\n' + json + '\nWith query: ' + query);
             }
             return json;
         } catch (err) {
+
+            if (err instanceof error.FleetNotExistError){
+                throw err;
+            }
+
             console.error(err.message);
             return this.getData(projectName, tags, fleets, start, end, retries - 1, delay + DELAY_CONST);
         }

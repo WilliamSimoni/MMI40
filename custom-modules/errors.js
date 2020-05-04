@@ -1,15 +1,28 @@
 class ProjectNotExistError extends Error {
     constructor(...args) {
         super(...args);
-        this.status = 400;
         Error.captureStackTrace(this, ProjectNotExistError);
     }
 }
 
+class FleetNotExistError extends Error {
+    constructor(...args) {
+        super(...args);
+        Error.captureStackTrace(this, FleetNotExistError);
+    }
+}
+
+class zdmGenericError extends Error {
+    constructor(...args) {
+        super(...args);
+        Error.captureStackTrace(this, zdmGenericError);
+    }
+}
+
+
 class ParametersError extends Error {
     constructor(...args) {
         super(...args);
-        this.status = 400;
         Error.captureStackTrace(this, ParametersError);
     }
 }
@@ -17,7 +30,6 @@ class ParametersError extends Error {
 class TooMuchRetriesError extends Error{
     constructor(...args) {
         super(...args);
-        this.status = 400;
         Error.captureStackTrace(this, TooMuchRetriesError);
     }
 }
@@ -33,3 +45,5 @@ exports.ProjectNotExistError = ProjectNotExistError;
 exports.ParametersError = ParametersError;
 exports.TooMuchRetriesError = TooMuchRetriesError;
 exports.NothingFoundError = NothingFoundError;
+exports.FleetNotExistError = FleetNotExistError;
+exports.zdmGenericError = zdmGenericError;
