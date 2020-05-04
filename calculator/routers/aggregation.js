@@ -238,13 +238,19 @@ router.post('/', [
         return response.status(200).json({ status: 200, result });
 
     } catch (err) {
-        if (!(err instanceof error.TooMuchRetriesError || err instanceof error.ProjectNotExistError)){
+        if (!(err instanceof error.TooMuchRetriesError || err instanceof error.ProjectNotExistError || err instanceof error.FleetNotExistError)){
             console.error(err);
         }
+        
         if (err instanceof error.TooMuchRetriesError){
-            return response.status(401).json({ status: 401, errors: ['problem connecting to ZDM'] });
+            return response.status(401).json({ status: 401, error : err.message });
         }
-        return response.status(400).json({ status: 400, errors: ['something went wrong'] });
+
+        if (err instanceof error.FleetNotExistError){
+            return response.status(402).json({status: 402, error: err.message});
+        }
+
+        return response.status(400).json({ status: 400, error: 'something went wrong' });
     }
 
 });
