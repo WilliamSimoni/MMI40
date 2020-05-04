@@ -28,6 +28,19 @@ const { sum, mean, min, max } = require('../CALCULATOR_modules/aggregationFuncti
 
 const error = require('../../custom-modules/errors');
 
+//
+//Thread Pool for aggregation
+//
+
+const {DynamicThreadPool} = require('poolifier');
+
+const pool = new DynamicThreadPool(2, 10,
+        __dirname + '/../CALCULATOR_modules/worker.js',
+        {
+            errorHandler: (e) => console.error(e)
+        }
+    );
+
 router.post('/', [
     body('aggrFun')
         .isString().bail()
@@ -197,24 +210,14 @@ router.post('/', [
             }
         }
 
-        //TODO
-        let externalAggregationCallback;
-
-        switch (aggrFun) {
-            case 'sum': externalAggregationCallback = sum; break
-            case 'mean': externalAggregationCallback = mean; break
-            case 'max': externalAggregationCallback = max; break
-            case 'min': externalAggregationCallback = min; break
-        }
-
-        let aggregatedData = [];
-
-
-
-        for (period of periods) {
-            aggregatedData.push(externalAggregationCallback(dataGroup, couples, data[period.start], dividedPeriods[period.start]));
-            //console.log(sum(dataGroup, couples, data[period.start], dividedPeriods[period.start])[1].result);
-        }
+        const aggregatedData = await pool.execute({
+            fname: aggrFun, 
+            dataGroup: dataGroup,
+            couples: couples,
+            data: data,
+            dividedPeriods: dividedPeriods,
+            periods: periods
+        })
 
         let result = [];
 

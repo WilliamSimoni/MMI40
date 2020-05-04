@@ -21,7 +21,7 @@ async function send(request) {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwicHJvamVjdG5hbWUiOiJwcm92YSIsImZsZWV0c1pkbUlkcyI6WyJmbHQtNHVyaXducnBsNHU2IiwiZmx0LTR1cml4dnVsa3d4ciIsImZsdC00dXJpeWpoc2hhcmsiXSwiZmxlZXRJZHMiOlsiOWZjNDI1ZjEtMTUxNC00OTFhLWI0YzQtMjdlOGI2YjBiODZiIiwiNTA3ZTM3MDktODliOS00ZjYyLTgwN2EtMDJiMzNmNzE1NDA4IiwiY2UzMTI5N2MtOGUwYS00ZGY3LTg0MzItYzBkN2ZlMGY4NGFkIl0sImlhdCI6MTU4ODQ4ODYyOSwiZXhwIjoxNTg4NTc1MDI5fQ.Ba2fmIvkDeobgDsNgC0ZXo5MDZP3YAgg7gtz4dCTdSE'
+            'Authorization': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwicHJvamVjdG5hbWUiOiJwcm92YSIsImZsZWV0c1pkbUlkcyI6WyJmbHQtNHVyaXducnBsNHU2IiwiZmx0LTR1cml4dnVsa3d4ciIsImZsdC00dXJpeWpoc2hhcmsiXSwiZmxlZXRJZHMiOlsiOWZjNDI1ZjEtMTUxNC00OTFhLWI0YzQtMjdlOGI2YjBiODZiIiwiNTA3ZTM3MDktODliOS00ZjYyLTgwN2EtMDJiMzNmNzE1NDA4IiwiY2UzMTI5N2MtOGUwYS00ZGY3LTg0MzItYzBkN2ZlMGY4NGFkIl0sImlhdCI6MTU4ODU3NjQwNywiZXhwIjoxNTg4NjYyODA3fQ.nv5ENPeuhXXWkl0EvpY4Zi4LwxIFlWn_x44iHlJ3Ooo'
         },
         body: JSON.stringify(request),
     };
@@ -39,17 +39,17 @@ start: moment.utc().subtract(2,'week').startOf('week').unix(),
 const request = {
     projectName: 'Prova',
     timeSeries: [[
-        { tag:"bathroom", value: "humidity" },
-        { tag:"kitchen", value: "temp" },
-    ],[
-        { tag:"kitchen", value: "temp" },
+        { tag: "bathroom", value: "humidity" },
+        { tag: "kitchen", value: "temp" },
+    ], [
+        { tag: "kitchen", value: "temp" },
     ]
     ],
     fleet: 'flt-4urixvulkwxr',
     aggrFunPerGroup: ['mean', 'mean'],
     aggregationFunction: 'mean',
-    timeRange: {key: 'day', number: 1},
-    granularity: {key: 'hour', number: 1},
+    timeRange: { key: 'day', number: 1 },
+    granularity: { key: 'minute', number: 1 },
     store: true
 }
 
@@ -57,19 +57,31 @@ const request = {
 //console.log(JSON.stringify(request, null, 2));
 
 const loginRequest = {
-    username:'admin',
-    password:'admin',
-    projectName:'prova'
+    username: 'admin',
+    password: 'admin',
+    projectName: 'prova'
 }
 
 
 const start = Date.now();
-send(request).then((json) => {console.log(json); console.log(Date.now() - start)}).catch(err => console.log(err));
+send(request)
+    .then((json) => {
+        console.log(json); 
+        if (json.result){
+            for (let item of json.result){
+                console.log(item.tags);
+                console.log(item.values);
+                console.log(item.timeSeries);
+            }
+        }
+        console.log(Date.now() - start)
+    })
+    .catch(err => console.log(err));
 
 
-async function tryFun(request){
-    while(true){
+async function tryFun(request) {
+    while (true) {
         const start = Date.now();
-        await send(request).then((json) => {console.log(json); console.log(Date.now() - start)}).catch(err => console.log(err));
+        await send(request).then((json) => { console.log(json); console.log(Date.now() - start) }).catch(err => console.log(err));
     }
 }
