@@ -21,16 +21,37 @@ async function checkToken(request, response, next) {
                         errors: ['Token is not valid']
                     });
                 } else {
-                    //search if token is in blacklist
+
+                    //
+                    //check if token is in blacklist
+                    //
+
                     const blacklistTokens = await database.searchTokenInBlackList(token);
+
+                    //
                     //token is in blacklist
+                    //
+
                     if (blacklistTokens[0]) {
-                        return response.status(480).json({
+                        return response.status(481).json({
                             status: 481,
                             errors: ['token is no longer valid']
                         });
                     }
+
+                    //
+                    // check if the user can access the indicated fleet
+                    //
+
+                    if (!decoded.fleetsZdmIds.includes(request.body.fleet)){
+                        return response.status(482).json({
+                            status: 482,
+                            errors: ['you cannot access to this fleet']
+                        });
+                    }
+
                     request.decoded = decoded;
+
                     next();
                 }
             } catch (err) {
