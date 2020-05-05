@@ -207,6 +207,7 @@ router.post('/', [
             }
         }
 
+        const start = Date.now();
         const aggregatedData = await pool.execute({
             fname: aggrFun, 
             dataGroup: dataGroup,
@@ -215,6 +216,7 @@ router.post('/', [
             dividedPeriods: dividedPeriods,
             periods: periods
         })
+        console.log(Date.now() - start)
 
         let result = [];
 
@@ -239,7 +241,7 @@ router.post('/', [
             let tmpTimeSeries = [];
             
             for (let i = 0; i < periods.length; i++) {
-                tmpTimeSeries = [...tmpTimeSeries, ...aggregatedData[i][j].result[0]];
+                tmpTimeSeries = [...tmpTimeSeries, ...aggregatedData[i].dataGroup[j].result[0]];
             }
 
             result.push({ tags, values, timeSeries: tmpTimeSeries });
