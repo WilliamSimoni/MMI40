@@ -101,7 +101,7 @@ function sumFun(dataGroups, couples, data, periods) {
             if (coupleTmpData.sum) {
                 coupleTmpData.result.push({ time: notEmptyPeriods[j][coupleTmpData.timeCounter], value: coupleTmpData.sum });
             } else {
-                coupleTmpData.invalid.push({ time: notEmptyPeriods[coupleTmpData.timeCounter] });
+                coupleTmpData.invalid.push({ time: notEmptyPeriods[j][coupleTmpData.timeCounter] });
             }
 
             coupleTmpData.timeCounter--;
@@ -116,7 +116,7 @@ function sumFun(dataGroups, couples, data, periods) {
 
     let dataGroupAggregationResult = internalAggregation(tmp, dataGroups, periods);
 
-    return dataGroupAggregationResult;
+    return {dataGroup: dataGroupAggregationResult, couple: tmp};
 }
 
 function meanFun(dataGroups, couples, data, periods) {
@@ -212,7 +212,7 @@ function meanFun(dataGroups, couples, data, periods) {
 
     let dataGroupAggregationResult = internalAggregation(tmp, dataGroups, periods);
 
-    return dataGroupAggregationResult;
+    return {dataGroup: dataGroupAggregationResult, couple: tmp};
 }
 
 function minFun(dataGroups, couples, data, periods) {
@@ -305,7 +305,7 @@ function minFun(dataGroups, couples, data, periods) {
 
     let dataGroupAggregationResult = internalAggregation(tmp, dataGroups, periods);
 
-    return dataGroupAggregationResult;
+    return {dataGroup: dataGroupAggregationResult, couple: tmp};
 }
 
 function maxFun(dataGroups, couples, data, periods) {
@@ -398,7 +398,7 @@ function maxFun(dataGroups, couples, data, periods) {
 
     let dataGroupAggregationResult = internalAggregation(tmp, dataGroups, periods);
 
-    return dataGroupAggregationResult;
+    return {dataGroup: dataGroupAggregationResult, couple: tmp};
 }
 
 function internalAggregation(tmp, dataGroups, periods){

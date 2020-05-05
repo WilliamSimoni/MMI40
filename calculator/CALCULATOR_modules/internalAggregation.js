@@ -2,7 +2,6 @@ const { sum, max, min, mean } = require('mathjs');
 
 function mergeTwoInvalidTimeSeries(timeSeries1, timeSeries2){
     const result = [];
-
     const length1 = timeSeries1.length;
     const length2 = timeSeries2.length;
 
@@ -87,7 +86,6 @@ function mergeTimeSeries(timeSeries, aggregationFunction) {
 }
 
 function mergeInvalidTimeSeries(timeSeries) {
-
     let result = timeSeries[0];
 
     for (let i = 1; i < timeSeries.length; i++) {

@@ -27,7 +27,7 @@ const { ThreadWorker } = require('poolifier')
 
 
 /**
- * 
+ * aggregate data
  * @param {Object} data - data used by the worker to choose aggregation function and which contain data and periods.
  * @param {string} data.fname - aggregation function name
  * @param {DataGroup} data.dataGroup - array where every item contains internal aggregation function and couple indexes.
