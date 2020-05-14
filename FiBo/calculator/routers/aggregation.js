@@ -1,5 +1,7 @@
 const rules = require('../../calculator configuration/rules');
 
+const fs = require('fs');
+
 //
 //Get data from ZDM
 //
@@ -65,6 +67,22 @@ function addClientQueue(clientIndex, result, invalid, projectName, fleet, tag, v
             database.queueStandardData(databaseClients[clientIndex], projectName, granularityKey, fleet, tag, value, null, false, aggrFun, payload.time);
             clientCounters[clientIndex]++;
         }
+    }
+
+}
+
+function insertSubPeriod(subPeriods, start, end, couple, mainPeriodStart) {
+
+    const subPeriodItem = subPeriods[mainPeriodStart].find(el => el.start === start && el.end === end);
+
+    if (subPeriodItem) {
+
+        if (!subPeriodItem.couples.some(el => el.tag === couple.tag && el.value === couple.value)) {
+            subPeriodItem.couples.push(couple);
+        }
+
+    } else {
+        subPeriods[mainPeriodStart].push({ couples: [couple], start: start, end: end })
     }
 
 }
@@ -167,19 +185,6 @@ router.post('/', [
             roundFactor
         } = request.body;
 
-        //divide periods in subPeriods according to granularities
-        /*dividedPeriod is structured as follow: 
-            dividePeriod: {
-                period.start: [[
-
-                ]]
-            }
-        */
-
-        //
-        //making support data structures
-        //
-
         //
         // array of object {tag: value: }. It represent the set of couples (tag, value) which are contained in the Time Series Object sent by Client.
         //
@@ -223,7 +228,10 @@ router.post('/', [
 
         let subPeriods = {};
 
+
         if (granularity.key !== 'second') {
+
+            let promises = [];
 
             for (let period of periods) {
 
@@ -232,155 +240,92 @@ router.post('/', [
                 subPeriods[period.start] = [];
 
                 //
-                // contains all the data sent by database
-                //
-
-                let databaseData = [];
-
-                //
-                // used in the next section to remember the index to which we arrived
-                //
-
-                let counter = [];
-
-                let tmpNoDataStart = [];
-
-                //
-                // read exixsting data from database
+                // read existing data from database
                 //
 
                 for (let couple of couples) {
-                    const result = await database.queryStandardData(
+                    promises.push(database.queryStandardData(
                         databaseClients[(roundFactorEnumarationValue > 3) ? 4 : (roundFactorEnumarationValue)],
                         projectName, fleet, couple.tag, couple.value, aggrFun, roundFactor, period.start * 1000000000, period.end * 1000000000
-                    );
-
-                    //
-                    // if it finds something then result.length > 0
-                    //
-
-                    if (result.length === 0) {
-                        const subPeriodItem = subPeriods[period.start].find(el => el.start === period.start && el.end === period.end);
-
-                        if (subPeriodItem) {
-
-                            if (!subPeriodItem.couples.some(el => el.tag === couple.tag && el.value === couple.value)) {
-                                subPeriodItem.couples.push(couple);
-                            }
-
-                        } else {
-
-                            subPeriods[period.start].push({ couples: [couple], start: period.start, end: period.end })
-
-                        }
-
-                    }
-
-                    databaseData.push(result);
-
-                    counter.push(result.length - 1);
-
-                    tmpNoDataStart.push(0);
+                    ));
 
                     databaseDataCouple[period.start].push({ result: [], invalid: [] });
-
                 }
-
-                let moment = period.start;
-                const end = period.end;
-
-                while (moment < end) {
-
-                    for (let i = 0; i < databaseData.length; i++) {
-
-                        if (databaseData[i].length === 0) {
-                            continue;
-                        }
-
-                        const item = databaseData[i];
-
-                        if (moment < item[counter[i]].time) {
-
-                            if (tmpNoDataStart[i] === 0) {
-                                //console.log('min', moment, item[counter[i]].time);
-                                tmpNoDataStart[i] = moment;
-                            }
-
-                        } else
-                            if (moment > item[counter[i]].time) {
-                                //console.log('minchione', moment, item[counter[i]].time);
-                                if (tmpNoDataStart[i] === 0) {
-                                    tmpNoDataStart[i] = moment;
-                                }
-                            }
-                            else {
-
-                                if (item[counter[i]].isValid) {
-                                    databaseDataCouple[period.start][i].result.unshift({ time: item[counter[i]].time, value: item[counter[i]].value });
-                                } else {
-                                    databaseDataCouple[period.start][i].invalid.unshift({ time: item[counter[i]].time, value: item[counter[i]].value });
-                                }
-
-                                //console.log('minchia', moment, item[counter[i]].time, tmpNoDataStart[i]);
-
-                                if (tmpNoDataStart[i] !== 0) {
-
-                                    const subPeriodItem = subPeriods[period.start].find(el => el.start === tmpNoDataStart[i] && el.end === moment - 1);
-
-                                    if (subPeriodItem) {
-
-                                        if (!subPeriodItem.couples.some(el => el.tag === couples[i].tag && el.value === couples[i].value)) {
-                                            subPeriodItem.couples.push(couples[i]);
-                                        }
-
-                                    } else {
-                                        subPeriods[period.start].push({ couples: [couples[i]], start: tmpNoDataStart[i], end: moment - 1 })
-                                    }
-
-                                    tmpNoDataStart[i] = 0;
-
-                                }
-
-                                if (counter[i] > 0) {
-                                    counter[i]--;
-                                }
-
-                            }
-
-                    }
-
-                    moment = time.add(moment, 1, roundFactor)
-                }
-
-                //
-                // controll data last period
-                //
-
-                for (let i = 0; i < databaseData.length; i++) {
-
-                    if (tmpNoDataStart[i] !== 0) {
-
-                        const subPeriodItem = subPeriods[period.start].find(el => el.start === tmpNoDataStart[i] && el.end === moment - 1);
-
-                        if (subPeriodItem) {
-
-                            if (!subPeriodItem.couples.some(el => el.tag === couples[i].tag && el.value === couples[i].value)) {
-                                subPeriodItem.couples.push(couples[i]);
-                            }
-
-                        } else {
-                            subPeriods[period.start].push({ couples: [couples[i]], start: tmpNoDataStart[i], end: end })
-                        }
-
-                    }
-
-                }
-
             }
 
+            await Promise.all(promises).then(value => {
+
+                for (let i = 0; i < periods.length; i++) {
+
+                    for (let j = 0; j < couples.length; j++) {
+
+                        const query = value[j + i * couples.length];
+
+                        const period = periods[i];
+
+                        const couple = couples[j];
+
+                        if (query.length === 0) {
+
+                            insertSubPeriod(subPeriods, time.round(period.start, granularity.key), period.end, couple, period.start);
+
+                        } else {
+
+                            let moment = period.start;
+
+                            let p = query.length - 1;
+
+                            while (moment <= period.end) {
+
+                                //
+                                // nomore data but the period is not finisced yet
+                                //
+
+                                if (p === -1) {
+                                    insertSubPeriod(subPeriods, time.round(time.add(query[0].time, granularity.number, granularity.key), granularity.key), period.end, couple, period.start);
+                                    break;
+                                }
+
+                                if (query[p].isValid) {
+                                    databaseDataCouple[period.start][j].result.unshift({ time: query[p].time, value: query[p].value });
+                                } else {
+                                    databaseDataCouple[period.start][j].invalid.unshift({ time: query[p].time, value: null });
+                                }
+
+                                //
+                                // moment is before first data contained in database
+                                //
+                                console.log(moment, query[p].time);
+                                if (moment < query[p].time) {
+                                    insertSubPeriod(subPeriods, time.round(moment, granularity.key), query[p].time - 1, couple, period.start);
+                                    p--;
+                                    moment = (p >= 0) ? query[p].time : null;
+                                    continue;
+                                }
+
+                                p--;
+                                moment = time.add(moment, 1, granularity.key);
+
+                            }
+
+                        }
+                    }
+
+                }
+
+            });
+        } else {
+            for (let period of periods) {
+                databaseDataCouple[period.start] = [];
+                subPeriods[period.start] = [];
+                for (let couple of couples) {
+                    databaseDataCouple[period.start].push({ result: [], invalid: [] });
+                    insertSubPeriod(subPeriods, period.start, period.end, couple, period.start);
+                }
+            }
         }
-        console.log(subPeriods);
-        //console.log(databaseDataCouple);
+
+        fs.writeFileSync('calculatorSub.txt',`${JSON.stringify(subPeriods, null, 2)}\n`);
 
         let dividedPeriods = {};
 
@@ -388,13 +333,15 @@ router.post('/', [
 
         let data = {};
 
-        dividedMainPeriods = [];
+        //
+        // empty array of promises
+        //
+
+        let promises = [];
 
         let p = 0;
 
         for (let period in subPeriods) {
-
-            dividedMainPeriods.push(time.createPeriods(periods[p].start, granularity.number, granularity.key, periods[p].end));
 
             p++;
 
@@ -408,7 +355,7 @@ router.post('/', [
                 //calculate sub-intervals based on granularity chosen by client
                 //
 
-                dividedPeriods[`${subperiod.start}${subperiod.end}`].push(time.createPeriods(subperiod.start, granularity.number, granularity.key, subperiod.end));
+                dividedPeriods[`${subperiod.start}${subperiod.end}`].push(time.createPeriods(time.round(subperiod.start, granularity.key), granularity.number, granularity.key, subperiod.end));
 
                 //
                 //calculate sub-intervals with standard granularities
@@ -423,50 +370,80 @@ router.post('/', [
 
                     } else {
 
-                        dividedPeriods[`${subperiod.start}${subperiod.end}`].push(time.createPeriods(subperiod.start, 1, stdgran, subperiod.end));
+                        dividedPeriods[`${subperiod.start}${subperiod.end}`].push(time.createPeriods(time.round(subperiod.start, stdgran), 1, stdgran, subperiod.end));
 
                     }
                 }
 
                 //
-                // fetching data from ZDM (TODO WITH PROMISE.ALL)
+                // fetching data from ZDM
                 //
 
-                try {
 
-                    const queryTags = ((couples) => {
-                        let result = [];
-                        for (let couple of couples){
-                            if (!result.includes(couple.tag)){
-                                result.push(couple.tag);
-                            }
+                const queryTags = ((couples) => {
+                    let result = [];
+                    for (let couple of couples) {
+                        if (!result.includes(couple.tag)) {
+                            result.push(couple.tag);
                         }
-                        return result;
-                    })(subperiod.couples);
-
-                    console.log(queryTags);
-
-                    let response = await iotData.getData(projectName, queryTags, [fleet], subperiod.start, subperiod.end, 2);
-                    //console.log(response);
-                    if (!response.result) {
-                        throw new error.NothingFoundError('nothing found');
-                    } else {
-                        response = response.result;
-                        data[`${subperiod.start}${subperiod.end}`] = response;
                     }
-                } catch (err) {
-                    if (!(err instanceof error.NothingFoundError)) {
-                        throw err;
-                    }
-                    data[`${subperiod.start}${subperiod.end}`] = [];
-                }
+                    return result;
+                })(subperiod.couples);
+
+                promises.push(iotData.getData(projectName, queryTags, [fleet], subperiod.start, subperiod.end, 2));
 
             }
         }
 
-        //console.log(data);
+        fs.writeFileSync('calculatorDivided.txt',`${JSON.stringify(dividedPeriods, null, 2)}\n`);
 
-        //const start = Date.now();
+
+        
+        //
+        // waiting for ZDM response
+        //
+
+        await Promise.all(promises).then(value => {
+
+            let p = 0;
+
+            for (let period in subPeriods) {
+
+                for (let subperiod of subPeriods[period]) {
+
+                    const response = value[p].result;
+                    
+                    p++;
+
+                    try {
+                        if (!response) {
+
+                            throw new error.NothingFoundError('nothing found');
+
+                        } else {
+
+                            data[`${subperiod.start}${subperiod.end}`] = response;
+
+                        }
+                    } catch (err) {
+                        if (!(err instanceof error.NothingFoundError)) {
+                            throw err;
+                        }
+                        data[`${subperiod.start}${subperiod.end}`] = [];
+                    }
+
+                }
+
+            }
+
+        });
+
+        console.log(request.body,couples);
+
+        //
+        // aggregate data
+        //
+
         const aggregatedData = await pool.execute({
             fname: aggrFun,
             dataGroup: dataGroup,
@@ -474,12 +451,10 @@ router.post('/', [
             data: data,
             dividedPeriods: dividedPeriods,
             periods: subPeriods,
-            dividedMainPeriods: dividedMainPeriods,
-            backupData: databaseDataCouple
+            mainPeriods: periods,
+            backupData: databaseDataCouple,
+            granularity: granularity
         })
-        //console.log(Date.now() - start)
-
-        //console.log(aggregatedData.dataGroupAggregation);
 
         let result = [];
 
@@ -499,12 +474,12 @@ router.post('/', [
                 values.push(couples[couple].value);
             }
 
-            //
+            //  
             // merging different periods in one time Series
             //
 
             for (let i = 0; i < periods.length; i++) {
-                result[j].push({ tags, values, result: aggregatedData.dataGroupAggregation[i][j].result, invalid: aggregatedData.dataGroupAggregation[i][j].invalid});
+                result[j].push({ tags, values, result: aggregatedData.dataGroupAggregation[i][j].result, invalid: aggregatedData.dataGroupAggregation[i][j].invalid });
             }
         }
 
@@ -522,10 +497,10 @@ router.post('/', [
             for (let period in subPeriods) {
 
                 for (let i = 0; i < subPeriods[period].length; i++) {
-                    
+
                     for (let t = 0; t < couples.length; t++) {
 
-                        const item = aggregatedData.coupleAggregation[i][t];
+                        const item = aggregatedData.coupleAggregation[t][i];
                         const couple = couples[t];
 
                         let keyEnNumber = roundFactorEnumarationValue;

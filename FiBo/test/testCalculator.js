@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-const raw = fs.readFileSync('./output.json');
+const raw = fs.readFileSync('./times.json');
 
 const json = JSON.parse(raw);
 
@@ -10,6 +10,11 @@ const {time} = require('../custom-modules/time');
 
 const moment = require('moment');
 
+for (let item of json.result){
+    console.log(moment.unix(item.time).toISOString());
+}
+
+/*
 const periods = time.createPeriods(1588953600, 120, 'second', 1588954349);
 
 console.log(sumFun(couple, json, [periods]).couple[0][0].result);
@@ -225,4 +230,4 @@ function sumFun(couples, data, periods) {
     }
 
     return { couple: tmp };
-}
+}*/

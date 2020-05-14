@@ -138,6 +138,14 @@ function meanFun(dataGroups, data, periods) {
 
     }
 
+    console.log(aggregation);
+
+    console.log(dataGroups);
+
+    console.log(data);
+
+    console.log(periods);
+
     //
     // aggregate for data group
     //

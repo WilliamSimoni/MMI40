@@ -4,6 +4,8 @@ const calculator = require(`../stub_modules/calculator`);
 const { Database } = require('../../database/db');
 const calculatorRules = require('../../calculator configuration/rules');
 
+const fs = require('fs');
+
 const moment = require('moment');
 
 //Obtaining instance database
@@ -324,6 +326,8 @@ router.post('/', [
 
                 const query = value[i];
                 
+                fs.writeFileSync('query.txt', `result for: \n${JSON.stringify(body, null, 2)}\nresult:\n${JSON.stringify(query, null, 2)}\n`);
+
                 //
                 // if it finds something then result.length > 0
                 //
@@ -340,8 +344,6 @@ router.post('/', [
                     let moment = period.start;
 
                     let p = query.length - 1;
-
-                    let t = 0;
 
                     while (moment <= period.end) {
 
@@ -388,6 +390,8 @@ router.post('/', [
             subPeriodsOrganised[period.timeSeries.toString()].push(period);
         }
 
+        fs.writeFileSync('subP.txt', `result:\n${JSON.stringify(subPeriods, null, 2)}\n`);
+
         let counter = 0;
 
         for (let group in subPeriodsOrganised) {
@@ -410,6 +414,8 @@ router.post('/', [
             }
 
             const res = await calculator.aggrFun(aggrFun, project, timeSeriesQuery, fleet, aggrFunPerGroupQuery, periods, granularity, period.minRoundFactor);
+
+            fs.writeFileSync('calculator.txt', `result:\n${JSON.stringify(res, null, 2)}\n`);
 
             //
             //calculator error handling
@@ -438,6 +444,7 @@ router.post('/', [
 
         for (let i = 0; i < timeSeries.length; i++) {
             result[i].timeSeries = merge.mergeTwoTimeSeries(result[i].timeSeries, databaseData[i]);
+            fs.appendFileSync('acazzo.txt', `result:\n${JSON.stringify(result[i].timeSeries, null, 2)}\n`);
         }
 
         //
@@ -447,6 +454,8 @@ router.post('/', [
         const nextRequestTime = time.add(period.end, granularity.number, granularity.key) - time.now();
 
         response.status(200).json({ status: 200, granularity, start: moment.unix(period.start).toISOString(), end: moment.unix(period.end).toISOString(), nextRequestTime, result });
+
+        fs.writeFileSync('log.txt', `result for: \n${JSON.stringify(body, null, 2)}\nresult:\n${JSON.stringify(result, null, 2)}\n`);
 
         if (counter > 0) {
             database.writeData(null, granularity.key);

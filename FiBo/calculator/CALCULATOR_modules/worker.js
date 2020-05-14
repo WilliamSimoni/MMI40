@@ -1,4 +1,5 @@
 
+
 //
 //aggregation functions
 //
@@ -46,13 +47,15 @@ const { time } = require('../../custom-modules/time');
  * @param {Couple} data.couples - array of couple tag-value. 
  * @param {Object[]} data.data - data sent by ZDM for different periods. i-th element is about i-th period in data.dividedPeriods.
  * @param {Object[]}  data.dividedPeriods - different periods with different divisions.
- * @param {Object[]} dividedMainPeriods
+ * @param {Object[]} mainPeriods
  * @param {Object[]}  data.backupData
+ * @param {Object} granularity
  */
 
 function aggregate(data) {
     let coupleAggregationCallback;
     let dataGroupAggregationCallback;
+
 
     switch (data.fname) {
         case 'sum': {
@@ -81,9 +84,13 @@ function aggregate(data) {
 
     let dataGroupAggregation = [];
 
+    let dividedMainPeriods = [];
+
     let p = 0;
 
     for (let period in data.periods) {
+
+        dividedMainPeriods.push(time.createPeriods(data.mainPeriods[p].start, data.granularity.number, data.granularity.key, data.mainPeriods[p].end));
 
         let aggregationResult = [];
 
@@ -100,15 +107,17 @@ function aggregate(data) {
             for (let i = 0; i < data.couples.length; i++) {
                 aggregationResult[i] = aggregationResult[i].concat(tmp.couple[i][0].result);
             }
-
         }
 
         for (let i = 0; i < data.couples.length; i++) {
-            aggregationResult[i] = mergeTwoTimeSeries(aggregationResult[i], data.backupData[period][i].result, mean);
+            aggregationResult[i] = mergeTwoTimeSeries(aggregationResult[i], data.backupData[period][i].result);
         }
 
-        dataGroupAggregation.push(dataGroupAggregationCallback(data.dataGroup, aggregationResult, data.dividedMainPeriods[p]));
 
+        dataGroupAggregation.push(dataGroupAggregationCallback(data.dataGroup, aggregationResult, dividedMainPeriods[p]));
+
+    
+        p++;
     }
 
 

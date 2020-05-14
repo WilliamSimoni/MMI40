@@ -52,6 +52,7 @@ function mergeTwoTimeSeries(timeSeries1, timeSeries2, aggregationFunction) {
                 j++;
             }
         } else {
+            console.log('errore', timeSeries1, timeSeries2)
             const aggregated = aggregationFunction(timeSeries1[i].value, timeSeries2[j].value);
             result.push({ time: time1, value: aggregated });
             i++; j++;

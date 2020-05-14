@@ -206,7 +206,7 @@ class InfluxDB {
             throw new Error('error in write data parameters');
         }
 
-        await databaseClient.syncWrite();
+        await databaseClient.syncWrite().catch(err => console.error(err));
     }
 
     /**

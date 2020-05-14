@@ -40,15 +40,13 @@ const request = {
     projectName: 'Prova',
     timeSeries: [[
         { tag: "bathroom", value: "temp" },
-    ],[
-        {tag:'safe', value:'temp'}
     ]
     ],
     fleet: 'flt-4urixvulkwxr',
-    aggregationFunction: 'mean',
-    timeRange: { key: 'day', number:  2 },
+    aggregationFunction: 'max',
+    timeRange: { key: 'minute', number:  2 },
     unit: 's',
-    granularity: { key: 'hour', number: 1 },
+    granularity: { key: 'minute', number: 1 },
     store: true
 }
 
